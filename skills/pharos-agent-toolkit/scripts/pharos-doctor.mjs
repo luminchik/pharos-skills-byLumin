@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+import {
+  findBinary,
+  loadNetworks,
+  printTable,
+  runBinary,
+  runCast
+} from "./lib/pharos.mjs";
+
+function status(ok) {
+  return ok ? "ok" : "missing";
+}
+
+console.log("# Pharos Doctor");
+console.log("");
+console.log(`Platform: ${process.platform} ${process.arch}`);
+console.log(`Node: ${process.version}`);
+console.log("");
+
+const binaryRows = ["cast", "forge", "bash"].map((name) => {
+  const binary = findBinary(name);
+  let version = "";
+  if (binary) {
+    try {
+      version = runBinary(name, ["--version"]).split(/\r?\n/)[0];
+    } catch (error) {
+      version = `version check failed: ${error.message}`;
+    }
+  }
+  return {
+    Tool: name,
+    Status: status(Boolean(binary)),
+    Path: binary || "-",
+    Version: version || "-"
+  };
+});
+
+printTable(binaryRows);
+console.log("");
+
+const hasCast = Boolean(findBinary("cast"));
+const config = loadNetworks();
+const networkRows = [];
+
+for (const network of config.networks) {
+  if (!hasCast) {
+    networkRows.push({
+      Network: network.name,
+      Expected: network.chainId,
+      Returned: "-",
+      Status: "skipped: cast missing"
+    });
+    continue;
+  }
+
+  try {
+    const chainId = runCast(["chain-id", "--rpc-url", network.rpcUrl]);
+    networkRows.push({
+      Network: network.name,
+      Expected: network.chainId,
+      Returned: chainId,
+      Status: Number(chainId) === Number(network.chainId) ? "ok" : "mismatch"
+    });
+  } catch (error) {
+    networkRows.push({
+      Network: network.name,
+      Expected: network.chainId,
+      Returned: "-",
+      Status: `error: ${error.message}`
+    });
+  }
+}
+
+printTable(networkRows);
+console.log("");
+
+const privateKey = process.env.PRIVATE_KEY || "";
+if (!privateKey) {
+  console.log("PRIVATE_KEY: not set");
+} else if (!hasCast) {
+  console.log("PRIVATE_KEY: set, address derivation skipped because cast is missing");
+} else {
+  try {
+    const address = runCast(["wallet", "address", "--private-key", privateKey]);
+    console.log(`PRIVATE_KEY: set, derived address ${address}`);
+  } catch (error) {
+    console.log(`PRIVATE_KEY: set, address derivation failed: ${error.message}`);
+  }
+}
+
+if (!hasCast) {
+  console.log("");
+  console.log("Install Foundry:");
+  console.log("- macOS/Linux: curl -L https://foundry.paradigm.xyz | bash && foundryup");
+  console.log("- Windows: install Git Bash, run the same installer, and add %USERPROFILE%\\.foundry\\bin to PATH");
+}

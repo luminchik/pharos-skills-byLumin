@@ -1,0 +1,8 @@
+interface:
+  display_name: "Pharos Tx History Summarizer"
+  short_description: "Summarize Pharos wallet transaction history"
+  brand_color: "#1D4ED8"
+  default_prompt: "Use $pharos-tx-history-summarizer to summarize a Pharos wallet's recent transaction history."
+policy:
+  allow_implicit_invocation: true
+

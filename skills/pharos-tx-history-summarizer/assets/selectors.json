@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "0x095ea7b3": "approve(address,uint256)",
+    "0x23b872dd": "transferFrom(address,address,uint256)",
+    "0x40c10f19": "mint(address,uint256)",
+    "0x42966c68": "burn(uint256)",
+    "0x70a08231": "balanceOf(address)",
+    "0xa22cb465": "setApprovalForAll(address,bool)",
+    "0xa9059cbb": "transfer(address,uint256)",
+    "0xdd62ed3e": "allowance(address,address)",
+    "0x6352211e": "ownerOf(uint256)",
+    "0xc87b56dd": "tokenURI(uint256)",
+    "0xf242432a": "safeTransferFrom(address,address,uint256,uint256,bytes)"
+  }
+}

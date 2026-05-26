@@ -1,0 +1,5 @@
+{
+  "description": "Registry for optional Pharos DeFi position definitions. Keep this conservative; add protocol contracts only after verifying addresses and read methods.",
+  "atlantic-testnet": [],
+  "mainnet": []
+}

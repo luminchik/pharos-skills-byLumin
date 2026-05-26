@@ -1,0 +1,7 @@
+interface:
+  display_name: "Pharos Batch Transfer"
+  short_description: "Safe Pharos airdrops and batch sends"
+  brand_color: "#1D4ED8"
+  default_prompt: "Use $pharos-batch-transfer to plan and safely execute a Pharos batch transfer from CSV input."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,27 @@
+{
+  "networks": [
+    {
+      "name": "atlantic-testnet",
+      "aliases": ["atlantic", "testnet", "pharos-testnet"],
+      "rpcUrl": "https://atlantic.dplabs-internal.com",
+      "chainId": 688689,
+      "explorerUrl": "https://atlantic.pharosscan.xyz/",
+      "explorerApiUrl": "https://api.socialscan.io/pharos-atlantic-testnet",
+      "historyApiUrl": "https://api.socialscan.io/pharos-atlantic-testnet/v1/explorer",
+      "nativeToken": "PHRS",
+      "environment": "testnet"
+    },
+    {
+      "name": "mainnet",
+      "aliases": ["pharos-mainnet", "pharos"],
+      "rpcUrl": "https://rpc.pharos.xyz",
+      "chainId": 1672,
+      "explorerUrl": "https://www.pharosscan.xyz/",
+      "explorerApiUrl": "https://api.socialscan.io/pharos-mainnet",
+      "historyApiUrl": "https://api.socialscan.io/pharos-mainnet/v1/explorer",
+      "nativeToken": "PROS",
+      "environment": "mainnet"
+    }
+  ],
+  "defaultNetwork": "mainnet"
+}

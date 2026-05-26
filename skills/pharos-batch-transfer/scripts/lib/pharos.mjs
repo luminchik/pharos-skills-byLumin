@@ -1,0 +1,239 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const skillRoot = path.resolve(__dirname, "..", "..");
+
+export function loadJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.join(skillRoot, relativePath), "utf8"));
+}
+
+export function loadNetworks() {
+  return loadJson("assets/networks.json");
+}
+
+export function loadTokens() {
+  return loadJson("assets/tokens.json");
+}
+
+export function isAddress(value) {
+  return /^0x[a-fA-F0-9]{40}$/.test(value || "");
+}
+
+export function selectNetwork(name = undefined) {
+  const config = loadNetworks();
+  const requested = (name || config.defaultNetwork || "").toLowerCase();
+  const network = config.networks.find((item) => {
+    const aliases = item.aliases || [];
+    return item.name.toLowerCase() === requested || aliases.map((alias) => alias.toLowerCase()).includes(requested);
+  });
+  if (!network) {
+    throw new Error(`Unknown network "${name}". Available: ${config.networks.map((item) => item.name).join(", ")}`);
+  }
+  return network;
+}
+
+function fileExists(filePath) {
+  try {
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+}
+
+function pathEntries() {
+  return (process.env.PATH || "").split(path.delimiter).filter(Boolean);
+}
+
+export function findBinary(name) {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  const isWin = process.platform === "win32";
+  const candidates = [];
+
+  if (isWin && home && ["cast", "forge"].includes(name)) {
+    candidates.push(path.join(home, ".foundry", "bin", `${name}.exe`));
+  }
+
+  for (const dir of pathEntries()) {
+    if (isWin) {
+      candidates.push(path.join(dir, `${name}.exe`));
+      candidates.push(path.join(dir, `${name}.cmd`));
+      candidates.push(path.join(dir, `${name}.bat`));
+    }
+    candidates.push(path.join(dir, name));
+  }
+
+  return candidates.find(fileExists) || null;
+}
+
+function redactText(value) {
+  return String(value).replace(/0x[a-fA-F0-9]{64}/g, "<redacted-private-key>");
+}
+
+function redactArgs(args) {
+  let redactNext = false;
+  return args.map((arg) => {
+    if (redactNext) {
+      redactNext = false;
+      return "<redacted>";
+    }
+    if (arg === "--private-key") {
+      redactNext = true;
+      return arg;
+    }
+    if (String(arg).startsWith("--private-key=")) {
+      return "--private-key=<redacted>";
+    }
+    return redactText(arg);
+  });
+}
+
+export function runBinary(name, args, options = {}) {
+  const binary = findBinary(name);
+  if (!binary) throw new Error(`Required binary "${name}" was not found in PATH`);
+
+  const result = spawnSync(binary, args, {
+    cwd: options.cwd || skillRoot,
+    env: options.env || process.env,
+    encoding: "utf8",
+    windowsHide: true,
+    shell: false
+  });
+
+  if (result.error) throw result.error;
+
+  const stdout = (result.stdout || "").trim();
+  const stderr = (result.stderr || "").trim();
+
+  if (result.status !== 0) {
+    const command = `${name} ${redactArgs(args).join(" ")}`;
+    const details = redactText(stderr || stdout || `exit code ${result.status}`);
+    const error = new Error(`${command} failed: ${details}`);
+    error.stdout = stdout;
+    error.stderr = stderr;
+    error.status = result.status;
+    throw error;
+  }
+
+  return stdout;
+}
+
+export function runCast(args, options = {}) {
+  return runBinary("cast", args, options);
+}
+
+export function runForge(args, options = {}) {
+  return runBinary("forge", args, options);
+}
+
+export function parseArgs(argv) {
+  const args = { _: [] };
+  for (let i = 0; i < argv.length; i += 1) {
+    const item = argv[i];
+    if (!item.startsWith("--")) {
+      args._.push(item);
+      continue;
+    }
+    const eq = item.indexOf("=");
+    if (eq !== -1) {
+      args[item.slice(2, eq)] = item.slice(eq + 1);
+      continue;
+    }
+    const key = item.slice(2);
+    const next = argv[i + 1];
+    if (!next || next.startsWith("--")) {
+      args[key] = true;
+    } else {
+      args[key] = next;
+      i += 1;
+    }
+  }
+  return args;
+}
+
+export function printTable(rows) {
+  if (!rows.length) {
+    console.log("(no rows)");
+    return;
+  }
+  const headers = [];
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      if (!headers.includes(key)) headers.push(key);
+    }
+  }
+  const widths = headers.map((header) =>
+    Math.max(header.length, ...rows.map((row) => String(row[header] ?? "").length))
+  );
+  console.log(`| ${headers.map((h, i) => h.padEnd(widths[i])).join(" | ")} |`);
+  console.log(`| ${widths.map((w) => "-".repeat(w)).join(" | ")} |`);
+  for (const row of rows) {
+    console.log(`| ${headers.map((h, i) => String(row[h] ?? "").padEnd(widths[i])).join(" | ")} |`);
+  }
+}
+
+export function shellQuote(value) {
+  if (/^\[.*\]$/.test(String(value))) return `"${String(value).replace(/"/g, '\\"')}"`;
+  if (/^[a-zA-Z0-9_./:$,\[\]-]+$/.test(String(value))) return String(value);
+  return `"${String(value).replace(/"/g, '\\"')}"`;
+}
+
+export function ensureDir(dir) {
+  fs.mkdirSync(dir, { recursive: true });
+}
+
+export function copyAsset(relativePath, targetPath) {
+  fs.copyFileSync(path.join(skillRoot, relativePath), targetPath);
+}
+
+export function explorerAddress(network, address) {
+  return `${network.explorerUrl.replace(/\/+$/, "")}/address/${address}`;
+}
+
+export function explorerTx(network, txHash) {
+  return `${network.explorerUrl.replace(/\/+$/, "")}/tx/${txHash}`;
+}
+
+export function parseUnits(value, decimals) {
+  const text = String(value).trim();
+  if (!/^\d+(\.\d+)?$/.test(text)) throw new Error(`Invalid decimal amount: ${value}`);
+  const [whole, fraction = ""] = text.split(".");
+  if (fraction.length > decimals) {
+    throw new Error(`Amount ${value} has more than ${decimals} decimals`);
+  }
+  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt((fraction.padEnd(decimals, "0") || "0"));
+}
+
+export function formatUnits(value, decimals) {
+  const amount = BigInt(value);
+  const scale = 10n ** BigInt(decimals);
+  const whole = amount / scale;
+  const remainder = amount % scale;
+  if (remainder === 0n) return whole.toString();
+  const fraction = remainder.toString().padStart(decimals, "0").replace(/0+$/, "");
+  return `${whole}.${fraction}`;
+}
+
+export function parseTxHash(output) {
+  return String(output || "").match(/transactionHash\s+(0x[a-fA-F0-9]{64})/)?.[1] || "";
+}
+
+export function resolveToken(network, tokenInput) {
+  if (!tokenInput) throw new Error("--token is required for ERC20 transfers");
+  const tokens = loadTokens()[network.name] || [];
+  const bySymbol = tokens.find((token) => token.symbol.toLowerCase() === String(tokenInput).toLowerCase());
+  if (bySymbol) return bySymbol;
+  if (isAddress(tokenInput)) {
+    return {
+      symbol: tokenInput,
+      name: tokenInput,
+      decimals: null,
+      address: tokenInput
+    };
+  }
+  throw new Error(`Unknown token "${tokenInput}" for ${network.name}. Use a known symbol or token address.`);
+}

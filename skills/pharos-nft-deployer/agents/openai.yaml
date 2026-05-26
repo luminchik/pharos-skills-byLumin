@@ -1,0 +1,8 @@
+interface:
+  display_name: "Pharos NFT Deployer"
+  short_description: "Deploy and mint Pharos NFT collections"
+  brand_color: "#1D4ED8"
+  default_prompt: "Use $pharos-nft-deployer to prepare and deploy an ERC721 NFT collection on Pharos."
+policy:
+  allow_implicit_invocation: true
+

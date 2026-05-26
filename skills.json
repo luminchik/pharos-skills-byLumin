@@ -1,0 +1,43 @@
+{
+  "name": "pharos-agent-center-skills",
+  "version": "0.1.0",
+  "description": "Portable Pharos Agent Center skills for AI agents on Pharos mainnet and Atlantic testnet.",
+  "official_reference": "https://github.com/PharosNetwork/pharos-skill-engine",
+  "skills": [
+    {
+      "name": "pharos-agent-toolkit",
+      "path": "skills/pharos-agent-toolkit",
+      "category": "developer-toolkit",
+      "write_capable": false,
+      "summary": "Diagnostics, portfolio summaries, allowance audits, NFT checks, and transaction debugging."
+    },
+    {
+      "name": "pharos-nft-deployer",
+      "path": "skills/pharos-nft-deployer",
+      "category": "nft",
+      "write_capable": true,
+      "summary": "ERC721/ERC1155 deployment, image metadata preparation, IPFS helper, and mint/baseURI commands."
+    },
+    {
+      "name": "pharos-batch-transfer",
+      "path": "skills/pharos-batch-transfer",
+      "category": "payments",
+      "write_capable": true,
+      "summary": "Native/ERC20 batch transfer and distributor workflows with dry-runs and confirmation gates."
+    },
+    {
+      "name": "pharos-defi-position-checker",
+      "path": "skills/pharos-defi-position-checker",
+      "category": "defi",
+      "write_capable": false,
+      "summary": "Registry-driven native, token, LP, staking, vault, and RealFi-style position reports."
+    },
+    {
+      "name": "pharos-tx-history-summarizer",
+      "path": "skills/pharos-tx-history-summarizer",
+      "category": "analytics",
+      "write_capable": false,
+      "summary": "Explorer-backed wallet transaction history summaries, gas totals, counterparties, and latest activity."
+    }
+  ]
+}

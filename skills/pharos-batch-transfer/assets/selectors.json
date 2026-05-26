@@ -1,0 +1,18 @@
+{
+  "0x1d678dc3": {
+    "signature": "batchTransferUniform(address[],uint256)",
+    "description": "Uniform native-token batch transfer used by Pharos distributor contracts."
+  },
+  "0x88d695b2": {
+    "signature": "batchTransfer(address[],uint256[])",
+    "description": "Variable native-token batch transfer."
+  },
+  "0x10a113e9": {
+    "signature": "batchTransferERC20Uniform(address,address[],uint256)",
+    "description": "Uniform ERC20 batch transfer through an allowance-based distributor."
+  },
+  "0x79f2447e": {
+    "signature": "batchTransferERC20(address,address[],uint256[])",
+    "description": "Variable ERC20 batch transfer through an allowance-based distributor."
+  }
+}
