@@ -24,6 +24,7 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 | `pharos-agent-toolkit` | Environment doctor, wallet portfolio summaries, ERC20 allowance audits, NFT ownership checks, transaction debugging, selector/event summaries | No for reads |
 | `pharos-nft-deployer` | ERC721/ERC1155 deployment, image-to-metadata preparation, IPFS metadata upload helper, baseURI/mint command generation | Only for broadcast |
 | `pharos-batch-transfer` | Native/ERC20 batch transfers, airdrops, distributor deployment, `batchTransferUniform(address[],uint256)` workflows | Only for broadcast |
+| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, saved bridge plans, dry-run execution, Jumper status, Transporter/CCIP status, bridge app links | Only for broadcast |
 | `pharos-defi-position-checker` | Native/token/LP/staking/vault/RealFi-style position reports using registry files | No |
 | `pharos-tx-history-summarizer` | Wallet transaction history, gas, success/failure, counterparties, latest activity via public explorer APIs | No |
 
@@ -86,6 +87,7 @@ The repository covers several suggested categories:
 - Wallet portfolio summary
 - NFT ownership checker and NFT creator
 - Batch transfer skill
+- Cross-chain bridge skill
 - DeFi position checker
 - Testnet/mainnet activity helper
 - Onchain analytics skill

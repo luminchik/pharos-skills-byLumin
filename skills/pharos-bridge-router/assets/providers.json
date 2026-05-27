@@ -1,0 +1,35 @@
+{
+  "lifi": {
+    "name": "Jumper / LI.FI",
+    "baseUrl": "https://li.quest/v1",
+    "jumperScanTx": "https://jumper.xyz/scan/tx/",
+    "pharosDiamond": "0xFf70F4A1d11995621854F3692acF286d8aCd04b2"
+  },
+  "ccip": {
+    "name": "Transporter / Chainlink CCIP",
+    "apiBaseUrl": "https://api.ccip.chain.link/v2",
+    "messageUrl": "https://ccip.chain.link/msg/",
+    "pharos": {
+      "chainId": 1672,
+      "chainSelector": "7801139999541420232",
+      "chainSelectorHex": "0x6c43377f53c1e0c8",
+      "networkName": "pharos-mainnet",
+      "routerAddress": "0x4e52dd94e9bcfefe3c78153bdfb0ab1d30687297",
+      "linkTokenAddress": "0x51e2A24742Db77604B881d6781Ee16B5b8fcBE29",
+      "supportedDestinationNames": [
+        "arbitrum",
+        "avalanche",
+        "base",
+        "bsc",
+        "hyperliquid",
+        "jovay",
+        "mainnet",
+        "monad",
+        "optimism",
+        "plume",
+        "polygon"
+      ]
+    }
+  }
+}
+

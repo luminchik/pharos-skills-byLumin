@@ -1,0 +1,79 @@
+{
+  "defaultFrom": "pharos",
+  "chains": [
+    {
+      "id": 1672,
+      "key": "pharos",
+      "name": "Pharos Mainnet",
+      "aliases": ["pharos", "phr", "pharos-mainnet", "pros"],
+      "rpcUrl": "https://rpc.pharos.xyz",
+      "explorerUrl": "https://www.pharosscan.xyz",
+      "nativeSymbol": "PROS",
+      "mainnet": true
+    },
+    {
+      "id": 8453,
+      "key": "base",
+      "name": "Base",
+      "aliases": ["base", "base-mainnet"],
+      "explorerUrl": "https://basescan.org",
+      "nativeSymbol": "ETH",
+      "mainnet": true
+    },
+    {
+      "id": 42161,
+      "key": "arbitrum",
+      "name": "Arbitrum One",
+      "aliases": ["arbitrum", "arb", "arbitrum-one"],
+      "explorerUrl": "https://arbiscan.io",
+      "nativeSymbol": "ETH",
+      "mainnet": true
+    },
+    {
+      "id": 1,
+      "key": "ethereum",
+      "name": "Ethereum",
+      "aliases": ["ethereum", "eth", "mainnet", "ethereum-mainnet"],
+      "explorerUrl": "https://etherscan.io",
+      "nativeSymbol": "ETH",
+      "mainnet": true
+    },
+    {
+      "id": 10,
+      "key": "optimism",
+      "name": "Optimism",
+      "aliases": ["optimism", "op"],
+      "explorerUrl": "https://optimistic.etherscan.io",
+      "nativeSymbol": "ETH",
+      "mainnet": true
+    },
+    {
+      "id": 137,
+      "key": "polygon",
+      "name": "Polygon",
+      "aliases": ["polygon", "matic"],
+      "explorerUrl": "https://polygonscan.com",
+      "nativeSymbol": "POL",
+      "mainnet": true
+    },
+    {
+      "id": 56,
+      "key": "bsc",
+      "name": "BNB Smart Chain",
+      "aliases": ["bsc", "bnb", "binance"],
+      "explorerUrl": "https://bscscan.com",
+      "nativeSymbol": "BNB",
+      "mainnet": true
+    },
+    {
+      "id": 43114,
+      "key": "avalanche",
+      "name": "Avalanche",
+      "aliases": ["avalanche", "avax"],
+      "explorerUrl": "https://snowtrace.io",
+      "nativeSymbol": "AVAX",
+      "mainnet": true
+    }
+  ]
+}
+

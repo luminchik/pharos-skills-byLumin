@@ -26,6 +26,13 @@
       "summary": "Native/ERC20 batch transfer and distributor workflows with dry-runs and confirmation gates."
     },
     {
+      "name": "pharos-bridge-router",
+      "path": "skills/pharos-bridge-router",
+      "category": "bridge",
+      "write_capable": true,
+      "summary": "Jumper/LI.FI bridge quotes and saved plans plus Transporter/Chainlink CCIP status tracking."
+    },
+    {
       "name": "pharos-defi-position-checker",
       "path": "skills/pharos-defi-position-checker",
       "category": "defi",

@@ -1,0 +1,355 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export const skillRoot = path.resolve(__dirname, "..", "..");
+
+export function loadJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.join(skillRoot, relativePath), "utf8"));
+}
+
+export function loadChains() {
+  return loadJson("assets/chains.json");
+}
+
+export function loadProviders() {
+  return loadJson("assets/providers.json");
+}
+
+export function parseArgs(argv) {
+  const args = { _: [] };
+  for (let i = 0; i < argv.length; i += 1) {
+    const item = argv[i];
+    if (!item.startsWith("--")) {
+      args._.push(item);
+      continue;
+    }
+    const eq = item.indexOf("=");
+    if (eq !== -1) {
+      args[item.slice(2, eq)] = item.slice(eq + 1);
+      continue;
+    }
+    const key = item.slice(2);
+    const next = argv[i + 1];
+    if (!next || next.startsWith("--")) {
+      args[key] = true;
+    } else {
+      args[key] = next;
+      i += 1;
+    }
+  }
+  return args;
+}
+
+export function isAddress(value) {
+  return /^0x[a-fA-F0-9]{40}$/.test(value || "");
+}
+
+export function isTxHash(value) {
+  return /^0x[a-fA-F0-9]{64}$/.test(value || "");
+}
+
+export function isNativeAddress(value) {
+  return String(value || "").toLowerCase() === "0x0000000000000000000000000000000000000000";
+}
+
+export function nowIso() {
+  return new Date().toISOString();
+}
+
+export function parseUnits(value, decimals) {
+  const text = String(value).trim();
+  if (!/^\d+(\.\d+)?$/.test(text)) throw new Error(`Invalid decimal amount: ${value}`);
+  const [whole, fraction = ""] = text.split(".");
+  if (fraction.length > decimals) throw new Error(`Amount ${value} has more than ${decimals} decimals`);
+  const fractionUnits = fraction.padEnd(decimals, "0") || "0";
+  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fractionUnits);
+}
+
+export function formatUnits(value, decimals) {
+  const amount = BigInt(value || 0);
+  const scale = 10n ** BigInt(decimals);
+  const whole = amount / scale;
+  const remainder = amount % scale;
+  if (remainder === 0n) return whole.toString();
+  const fraction = remainder.toString().padStart(decimals, "0").replace(/0+$/, "");
+  return `${whole}.${fraction}`;
+}
+
+export function printTable(rows) {
+  if (!rows.length) {
+    console.log("(no rows)");
+    return;
+  }
+  const headers = [];
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      if (!headers.includes(key)) headers.push(key);
+    }
+  }
+  const widths = headers.map((header) =>
+    Math.max(header.length, ...rows.map((row) => String(row[header] ?? "").length))
+  );
+  console.log(`| ${headers.map((h, i) => h.padEnd(widths[i])).join(" | ")} |`);
+  console.log(`| ${widths.map((w) => "-".repeat(w)).join(" | ")} |`);
+  for (const row of rows) {
+    console.log(`| ${headers.map((h, i) => String(row[h] ?? "").padEnd(widths[i])).join(" | ")} |`);
+  }
+}
+
+export async function fetchJson(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      accept: "application/json",
+      "user-agent": "pharos-bridge-router/0.1.0",
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    let details = text;
+    try {
+      const parsed = JSON.parse(text);
+      const reasons = [];
+      for (const item of parsed.errors?.filteredOut || []) {
+        if (item.reason) reasons.push(item.reason);
+      }
+      for (const item of parsed.errors?.failed || []) {
+        for (const failures of Object.values(item.subpaths || {})) {
+          for (const failure of failures || []) {
+            if (failure.message) reasons.push(`${failure.tool || "tool"}: ${failure.message}`);
+          }
+        }
+      }
+      const suffix = reasons.length ? ` Reasons: ${[...new Set(reasons)].slice(0, 5).join(" | ")}` : "";
+      details = `${parsed.message || JSON.stringify(parsed)}${suffix}`;
+    } catch {
+      // keep original text
+    }
+    throw new Error(`HTTP ${response.status} from ${url}: ${details}`);
+  }
+  if (!text) return null;
+  return JSON.parse(text);
+}
+
+export function resolveLocalChain(input) {
+  if (input === undefined || input === null || input === "") return null;
+  const text = String(input).trim().toLowerCase();
+  const numeric = Number(text);
+  if (Number.isInteger(numeric) && numeric > 0) {
+    return {
+      id: numeric,
+      key: text,
+      name: `Chain ${numeric}`,
+      aliases: [text],
+      mainnet: true
+    };
+  }
+  const config = loadChains();
+  const match = config.chains.find((chain) => {
+    const aliases = chain.aliases || [];
+    return chain.key.toLowerCase() === text || chain.name.toLowerCase() === text || aliases.map((a) => a.toLowerCase()).includes(text);
+  });
+  if (!match) {
+    throw new Error(`Unknown chain "${input}". Use a chain ID or one of: ${config.chains.map((c) => c.key).join(", ")}`);
+  }
+  return match;
+}
+
+export async function getLifiChains() {
+  const providers = loadProviders();
+  const data = await fetchJson(`${providers.lifi.baseUrl}/chains`);
+  return data.chains || [];
+}
+
+export async function enrichChain(chain) {
+  const chains = await getLifiChains();
+  const remote = chains.find((item) => item.id === chain.id);
+  if (!remote) return chain;
+  return {
+    ...chain,
+    name: remote.name || chain.name,
+    key: remote.key || chain.key,
+    rpcUrl: remote.metamask?.rpcUrls?.[0] || chain.rpcUrl,
+    explorerUrl: remote.metamask?.blockExplorerUrls?.[0] || chain.explorerUrl,
+    nativeSymbol: remote.nativeToken?.symbol || chain.nativeSymbol,
+    nativeToken: remote.nativeToken,
+    mainnet: remote.mainnet ?? chain.mainnet
+  };
+}
+
+export async function getLifiTokens(chainId) {
+  const providers = loadProviders();
+  const data = await fetchJson(`${providers.lifi.baseUrl}/tokens?chains=${encodeURIComponent(chainId)}`);
+  return data.tokens?.[String(chainId)] || [];
+}
+
+export async function resolveLifiToken(chainId, input, decimalsOverride = undefined) {
+  if (!input) throw new Error("Token is required");
+  const text = String(input).trim();
+  const lower = text.toLowerCase();
+  const tokens = await getLifiTokens(chainId);
+
+  if (["native", "gas"].includes(lower)) {
+    const nativeToken = tokens.find((token) => isNativeAddress(token.address));
+    if (nativeToken) return nativeToken;
+  }
+
+  const nativeToken = tokens.find((token) => isNativeAddress(token.address));
+  if (nativeToken && nativeToken.symbol?.toLowerCase() === lower) {
+    return nativeToken;
+  }
+
+  if (isAddress(text)) {
+    const exact = tokens.find((token) => token.address.toLowerCase() === lower);
+    if (exact) return exact;
+    if (decimalsOverride === undefined) throw new Error(`Token ${text} is not in LI.FI token list for chain ${chainId}; pass --from-decimals for custom source tokens.`);
+    return {
+      address: text,
+      chainId,
+      symbol: text,
+      name: text,
+      decimals: Number(decimalsOverride)
+    };
+  }
+
+  const exactSymbol = tokens.filter((token) => token.symbol?.toLowerCase() === lower || token.coinKey?.toLowerCase() === lower);
+  if (exactSymbol.length) {
+    return exactSymbol.find((token) => token.verificationStatus === "verified") || exactSymbol[0];
+  }
+
+  throw new Error(`Token "${input}" was not found on LI.FI chain ${chainId}`);
+}
+
+export function explorerTx(chain, txHash) {
+  if (!chain?.explorerUrl) return txHash;
+  return `${chain.explorerUrl.replace(/\/+$/, "")}/tx/${txHash}`;
+}
+
+function fileExists(filePath) {
+  try {
+    return fs.existsSync(filePath);
+  } catch {
+    return false;
+  }
+}
+
+function pathEntries() {
+  return (process.env.PATH || "").split(path.delimiter).filter(Boolean);
+}
+
+export function findBinary(name) {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  const isWin = process.platform === "win32";
+  const candidates = [];
+  if (isWin && home && ["cast", "forge"].includes(name)) {
+    candidates.push(path.join(home, ".foundry", "bin", `${name}.exe`));
+  }
+  for (const dir of pathEntries()) {
+    if (isWin) {
+      candidates.push(path.join(dir, `${name}.exe`));
+      candidates.push(path.join(dir, `${name}.cmd`));
+      candidates.push(path.join(dir, `${name}.bat`));
+    }
+    candidates.push(path.join(dir, name));
+  }
+  return candidates.find(fileExists) || null;
+}
+
+function redactText(value) {
+  return String(value).replace(/0x[a-fA-F0-9]{64}/g, "<redacted-private-key>");
+}
+
+function redactArgs(args) {
+  let redactNext = false;
+  return args.map((arg) => {
+    if (redactNext) {
+      redactNext = false;
+      return "<redacted>";
+    }
+    if (arg === "--private-key") {
+      redactNext = true;
+      return arg;
+    }
+    if (String(arg).startsWith("--private-key=")) return "--private-key=<redacted>";
+    return redactText(arg);
+  });
+}
+
+export function runBinary(name, args, options = {}) {
+  const binary = findBinary(name);
+  if (!binary) throw new Error(`Required binary "${name}" was not found in PATH`);
+  const result = spawnSync(binary, args, {
+    cwd: options.cwd || skillRoot,
+    env: options.env || process.env,
+    encoding: "utf8",
+    windowsHide: true,
+    shell: false
+  });
+  if (result.error) throw result.error;
+  const stdout = (result.stdout || "").trim();
+  const stderr = (result.stderr || "").trim();
+  if (result.status !== 0) {
+    const command = `${name} ${redactArgs(args).join(" ")}`;
+    const details = redactText(stderr || stdout || `exit code ${result.status}`);
+    const error = new Error(`${command} failed: ${details}`);
+    error.stdout = stdout;
+    error.stderr = stderr;
+    error.status = result.status;
+    throw error;
+  }
+  return stdout;
+}
+
+export function runCast(args, options = {}) {
+  return runBinary("cast", args, options);
+}
+
+export function shellPrivateKeyExpression() {
+  return process.platform === "win32" ? "$env:PRIVATE_KEY" : "$PRIVATE_KEY";
+}
+
+export function castSendPreview(txRequest, rpcUrl, options = {}) {
+  const value = BigInt(txRequest.value || "0x0").toString();
+  const data = options.compact ? "<calldata-from-plan>" : txRequest.data || "0x";
+  const parts = [
+    "cast",
+    "send",
+    txRequest.to,
+    "--data",
+    data,
+    "--value",
+    `${value}wei`,
+    "--private-key",
+    shellPrivateKeyExpression()
+  ];
+  if (rpcUrl) parts.push("--rpc-url", rpcUrl);
+  return parts.join(" ");
+}
+
+export function calldataSummary(data) {
+  const text = String(data || "0x");
+  const bytes = text.startsWith("0x") ? Math.max(0, (text.length - 2) / 2) : text.length;
+  if (text.length <= 26) return `${text} (${bytes} bytes)`;
+  return `${text.slice(0, 18)}...${text.slice(-8)} (${bytes} bytes)`;
+}
+
+export function writeJson(filePath, data) {
+  fs.mkdirSync(path.dirname(path.resolve(filePath)), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`);
+}
+
+export function readJson(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+export function planAgeSeconds(plan) {
+  const created = Date.parse(plan.createdAt || "");
+  if (!Number.isFinite(created)) return Infinity;
+  return Math.floor((Date.now() - created) / 1000);
+}

@@ -1,0 +1,8 @@
+interface:
+  display_name: "Pharos Bridge Router"
+  short_description: "Bridge Pharos routes with Jumper and CCIP"
+  brand_color: "#1D4ED8"
+  default_prompt: "Use $pharos-bridge-router to quote and track a Pharos cross-chain bridge route."
+policy:
+  allow_implicit_invocation: true
+

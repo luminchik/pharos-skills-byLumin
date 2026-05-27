@@ -1,0 +1,27 @@
+# Transporter / Chainlink CCIP
+
+Transporter is Chainlink CCIP-backed, so this skill tracks Transporter transfers through CCIP message IDs.
+
+## Status
+
+`bridge-status.mjs --provider ccip` calls:
+
+```text
+https://api.ccip.chain.link/v2/messages/<messageId>
+```
+
+The response includes source and destination networks, sender, receiver, status, send transaction, receipt transaction, and sequence number.
+
+## Pharos Mainnet CCIP Constants
+
+Known Pharos CCIP values are stored in `assets/providers.json`:
+
+- Chain ID: `1672`
+- Chain selector: `7801139999541420232`
+- Router: `0x4e52dd94e9bcfefe3c78153bdfb0ab1d30687297`
+- LINK token: `0x51e2A24742Db77604B881d6781Ee16B5b8fcBE29`
+
+## Execution Scope
+
+The first version of this skill does not synthesize direct CCIP `ccipSend` calldata. It tracks CCIP messages and validates Pharos router support. Add direct execution only after a dedicated ABI-level workflow is tested for the exact token/lane.
+
