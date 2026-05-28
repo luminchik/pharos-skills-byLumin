@@ -1,6 +1,6 @@
 interface:
   display_name: "Pharos Faroswap Swapper"
-  short_description: "Quote, plan, and safely execute Faroswap swaps"
+  short_description: "Quote, buy target amounts, and safely execute Faroswap swaps"
   brand_color: "#1D4ED8"
   default_prompt: "Use $pharos-faroswap-swapper to quote and plan a Faroswap swap on Pharos mainnet."
 policy:

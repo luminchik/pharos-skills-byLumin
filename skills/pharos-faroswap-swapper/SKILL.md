@@ -1,7 +1,7 @@
 ---
 name: pharos-faroswap-swapper
 description: >
-  Portable Pharos Agent Center skill for Faroswap swaps on Pharos mainnet. Use when the user asks to swap PROS, WPROS, or USDC through Faroswap, quote Faroswap routes, plan a safe swap, execute a saved swap plan, use local mainnet auto-confirm policy, wrap PROS to WPROS, unwrap WPROS to PROS, inspect a Faroswap transaction, decode Faroswap mixSwap calldata, or diagnose Faroswap/DODO quote support. Uses the public Faroswap DODO widget quote API and Foundry cast for execution.
+  Portable Pharos Agent Center skill for Faroswap swaps on Pharos mainnet. Use when the user asks to swap PROS, WPROS, or USDC through Faroswap, buy a target amount of a token, sell a token for another token, quote Faroswap routes, plan a safe swap, execute a saved or ephemeral swap plan, use local mainnet auto-confirm policy, wrap PROS to WPROS, unwrap WPROS to PROS, inspect a Faroswap transaction, decode Faroswap mixSwap calldata, or diagnose Faroswap/DODO quote support. Uses the public Faroswap DODO widget quote API and Foundry cast for execution.
 ---
 
 # Pharos Faroswap Swapper
@@ -15,6 +15,7 @@ Required binaries: Node.js. Required for execution and transaction inspection: F
 - Faroswap is Pharos mainnet only (`chainId 1672`).
 - Use Faroswap/DODO quote output for `to`, `data`, `value`, `minReturnAmount`, and approval spender. Do not hand-build router calldata when the API is available.
 - Never broadcast directly from a chat answer. Save a plan first, then execute the saved plan.
+- For normal user requests like "swap 0.001 PROS to USDC" or "buy 5 PROS with USDC", prefer `faroswap-swap-safe.mjs`; it can use an ephemeral plan and avoids ad-hoc quote-search code.
 - Mainnet swap execution requires `--broadcast --confirm CONFIRM_MAINNET_SWAP`.
 - A matching local policy may replace the confirmation string only when the user explicitly configured it; scripts still require `--broadcast`.
 - Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
@@ -28,6 +29,8 @@ Required binaries: Node.js. Required for execution and transaction inspection: F
 | --- | --- | --- |
 | Quote PROS to USDC | `node scripts/faroswap-quote.mjs --from PROS --to USDC --amount 0.01 --address <wallet>` | See `references/faroswap.md` |
 | Quote USDC to PROS | `node scripts/faroswap-quote.mjs --from USDC --to PROS --amount 1 --address <wallet>` | ERC20 quote uses `estimateGas=false` by default |
+| Simple exact-input swap | `node scripts/faroswap-swap-safe.mjs --from PROS --to USDC --amount 0.001 --broadcast` | Uses ephemeral plan unless `--save-plan` is passed |
+| Buy target output amount | `node scripts/faroswap-swap-safe.mjs --from USDC --to PROS --target-out 5 --broadcast` | Quickly finds input with `minReturnAmount >= target`; add `--max-quotes 12` for tighter sizing |
 | Plan and save a swap | Add `--output faroswap-plan.json` to `faroswap-quote.mjs` | Review before execution |
 | Execute a saved plan | `node scripts/faroswap-execute.mjs --plan faroswap-plan.json --broadcast --confirm CONFIRM_MAINNET_SWAP` | See `references/safety.md` |
 | Execute with local policy | `node scripts/faroswap-execute.mjs --plan faroswap-plan.json --broadcast` | Requires matching `pharos_policy.json` |
@@ -47,6 +50,18 @@ Quote all built-in pairs:
 
 ```bash
 node scripts/faroswap-quote.mjs --matrix --address 0xYourWallet --amount 0.001
+```
+
+Swap with an ephemeral plan:
+
+```bash
+node scripts/faroswap-swap-safe.mjs --from PROS --to USDC --amount 0.001 --broadcast
+```
+
+Buy a target output amount:
+
+```bash
+node scripts/faroswap-swap-safe.mjs --from USDC --to PROS --target-out 5 --broadcast
 ```
 
 Execute after review:
@@ -72,6 +87,7 @@ node scripts/faroswap-decode-tx.mjs --tx 0x87a74a2dcc0328fb4ec471c2b2f5361c1ff11
 - Show network, from token, to token, input amount, estimated output, minimum return, slippage, route source, target, value, approval spender, gas limit, and plan expiry.
 - For ERC20 swaps, show whether approval is required and the exact approval amount.
 - For execution, show approval tx hash when approval was sent and swap tx hash after broadcast.
+- For target-output requests, say that Faroswap is exact-input under the hood; the safe swap script targets `minReturnAmount >= requested output`, so the user may receive slightly more.
 - For decode, show function selector, decoded action, transfers for known tokens, and explorer links.
 
 ## Safety
