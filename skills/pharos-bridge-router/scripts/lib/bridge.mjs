@@ -284,6 +284,16 @@ export function defaultPrivateKeyPaths() {
   ]);
 }
 
+export function defaultPolicyPaths() {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  return unique([
+    process.env.PHAROS_POLICY_FILE,
+    process.env.CODEX_HOME ? path.join(process.env.CODEX_HOME, "secrets", "pharos_policy.json") : "",
+    home ? path.join(home, ".codex", "secrets", "pharos_policy.json") : "",
+    home ? path.join(home, ".pharos", "policy.json") : ""
+  ]);
+}
+
 function normalizePrivateKey(value, source = "private key") {
   const trimmed = String(value || "").trim();
   if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) return trimmed;
@@ -316,6 +326,103 @@ export function readPrivateKey(args = {}) {
     }
   }
   throw new Error(privateKeySetupMessage());
+}
+
+export function tryReadPrivateKey(args = {}) {
+  try {
+    return readPrivateKey(args);
+  } catch {
+    return "";
+  }
+}
+
+export function readPolicy(args = {}) {
+  const candidates = unique([
+    args.policy ? path.resolve(args.policy) : "",
+    ...defaultPolicyPaths()
+  ]);
+  for (const filePath of candidates) {
+    if (fileExists(filePath)) {
+      const policy = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      policy.__source = filePath;
+      return policy;
+    }
+  }
+  return null;
+}
+
+function pickCaseInsensitive(record, key) {
+  if (!record || !key) return undefined;
+  const lower = String(key).toLowerCase();
+  const found = Object.keys(record).find((item) => item.toLowerCase() === lower);
+  return found ? record[found] : undefined;
+}
+
+function containsNumber(values, value) {
+  if (!Array.isArray(values) || !values.length) return true;
+  return values.map((item) => Number(item)).includes(Number(value));
+}
+
+function containsText(values, value) {
+  if (!Array.isArray(values) || !values.length) return true;
+  const lower = String(value || "").toLowerCase();
+  return values.map((item) => String(item).toLowerCase()).includes(lower);
+}
+
+function denyAutoConfirm(reason, source = "") {
+  return { allowed: false, reason, source };
+}
+
+export function evaluateMainnetAutoConfirm(policy, request) {
+  if (!policy) return denyAutoConfirm("no policy file found");
+  const source = policy.__source || "policy";
+  const mainnet = policy.mainnet || {};
+  const auto = typeof mainnet.autoConfirm === "object" ? mainnet.autoConfirm : {};
+  const enabled = auto.enabled === true || mainnet.autoConfirm === true;
+  if (!enabled) return denyAutoConfirm("mainnet auto-confirm is disabled", source);
+
+  const expiresAt = auto.expiresAt || mainnet.expiresAt || policy.expiresAt || "";
+  if (expiresAt && Date.now() > Date.parse(expiresAt)) {
+    return denyAutoConfirm(`policy expired at ${expiresAt}`, source);
+  }
+
+  const signer = String(request.signer || "").toLowerCase();
+  const allowedSigner = String(auto.allowedSigner || mainnet.allowedSigner || policy.allowedSigner || "").toLowerCase();
+  if (allowedSigner && signer !== allowedSigner) {
+    return denyAutoConfirm(`signer ${request.signer} does not match policy signer ${allowedSigner}`, source);
+  }
+
+  const actions = auto.actions || mainnet.actions || {};
+  const actionConfig = actions[request.action] || {};
+  if (Object.keys(actions).length && actionConfig.enabled !== true) {
+    return denyAutoConfirm(`action ${request.action} is not enabled in policy`, source);
+  }
+
+  if (!containsNumber(actionConfig.allowedFromChains, request.fromChainId)) {
+    return denyAutoConfirm(`from chain ${request.fromChainId} is not allowed`, source);
+  }
+  if (!containsNumber(actionConfig.allowedToChains, request.toChainId)) {
+    return denyAutoConfirm(`to chain ${request.toChainId} is not allowed`, source);
+  }
+  if (!containsText(actionConfig.allowedTools, request.tool)) {
+    return denyAutoConfirm(`tool ${request.tool || "-"} is not allowed`, source);
+  }
+
+  const limits = actionConfig.maxAmount || actionConfig.maxFromAmount || {};
+  const limit = pickCaseInsensitive(limits, request.tokenSymbol);
+  if (limit === undefined) {
+    return denyAutoConfirm(`no maxAmount policy for ${request.tokenSymbol}`, source);
+  }
+  const limitBase = parseUnits(String(limit), Number(request.tokenDecimals));
+  if (BigInt(request.amountBase) > limitBase) {
+    return denyAutoConfirm(`${request.amountHuman} ${request.tokenSymbol} exceeds policy limit ${limit}`, source);
+  }
+
+  return {
+    allowed: true,
+    source,
+    reason: `policy matched ${request.action}: ${request.amountHuman} ${request.tokenSymbol} <= ${limit}`
+  };
 }
 
 function redactText(value) {

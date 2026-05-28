@@ -6,7 +6,7 @@ Bridge writes are mainnet operations. Use this sequence:
 2. Review route, source chain, destination chain, token addresses, amounts, approval address, transaction target, calldata, and value.
 3. Check that the plan is less than 10 minutes old.
 4. Confirm a private key source exists without printing it. `bridge-execute.mjs` tries `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
-5. Execute with `--broadcast --confirm CONFIRM_MAINNET_BRIDGE`.
+5. Execute with `--broadcast --confirm CONFIRM_MAINNET_BRIDGE`, or omit `--confirm` only when a user-configured local policy matches signer, action, route, token, and amount.
 6. Track the source transaction with `bridge-status.mjs`.
 
 Never:
@@ -16,3 +16,4 @@ Never:
 - Retry a bridge transaction automatically.
 - Print a private key.
 - Execute hidden frontend API results unless the endpoint is documented or explicitly accepted by the user.
+- Create or relax an auto-confirm policy unless the user explicitly asks for it.

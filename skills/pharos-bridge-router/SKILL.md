@@ -1,7 +1,7 @@
 ---
 name: pharos-bridge-router
 description: >
-  Portable Pharos Agent Center skill for cross-chain bridge workflows through Jumper/LI.FI and Transporter/Chainlink CCIP. Use when the user asks to bridge from Pharos mainnet to another EVM chain, bridge back to Pharos, quote bridge routes, compare supported destination chains or tokens, build a safe bridge transaction plan, execute a saved bridge plan with Foundry cast, track Jumper transaction status, track Transporter CCIP message status, inspect CCIP message IDs, or diagnose Pharos bridge provider support. Supports Pharos mainnet chainId 1672, PROS, USDC, LINK, WETH, WPROS, Base, Arbitrum, Ethereum, Optimism, Polygon, BSC, Avalanche, and any LI.FI-supported chain ID.
+  Portable Pharos Agent Center skill for cross-chain bridge workflows through Jumper/LI.FI and Transporter/Chainlink CCIP. Use when the user asks to bridge from Pharos mainnet to another EVM chain, bridge back to Pharos, quote bridge routes, compare supported destination chains or tokens, build a safe bridge transaction plan, run fast quote plus safety checks, execute a saved bridge plan with Foundry cast, use local mainnet auto-confirm policy, track Jumper transaction status, track Transporter CCIP message status, inspect CCIP message IDs, or diagnose Pharos bridge provider support. Supports Pharos mainnet chainId 1672, PROS, USDC, LINK, WETH, WPROS, Base, Arbitrum, Ethereum, Optimism, Polygon, BSC, Avalanche, and any LI.FI-supported chain ID.
 ---
 
 # Pharos Bridge Router
@@ -18,6 +18,7 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 - Default source chain is Pharos mainnet (`1672`) only when the user clearly asks for Pharos bridging.
 - Never broadcast directly from a quote. Save a plan first, then execute the saved plan.
 - Mainnet bridge execution requires `--broadcast --confirm CONFIRM_MAINNET_BRIDGE`.
+- A matching local policy may replace the confirmation string only when the user explicitly configured it; scripts still require `--broadcast`.
 - Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Refresh quotes before execution if the saved plan is older than 10 minutes.
 - For ERC20 routes, approve only the exact quoted amount unless the user explicitly asks for another allowance.
@@ -29,6 +30,7 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 | User need | Use | Details |
 | --- | --- | --- |
 | Quote Pharos to another chain with Jumper | `node scripts/bridge-quote.mjs --from pharos --to base --from-token PROS --to-token PROS --amount 0.01 --address <wallet>` | See `references/jumper-lifi.md` |
+| Quote plus safety checks in one run | `node scripts/bridge-plan-safe.mjs --from pharos --to base --from-token USDC --to-token USDC --amount 0.05 --address <wallet> --output plan.json` | Best default for clean-chat bridge prep |
 | Quote another chain back to Pharos | `node scripts/bridge-quote.mjs --from base --to pharos --from-token ETH --to-token PROS --amount 0.001 --address <wallet>` | See `references/jumper-lifi.md` |
 | Discover currently supported Jumper routes | `node scripts/bridge-discover.mjs --from pharos --quotes usdc --address <wallet> --output routes.json` | See `references/jumper-lifi.md` |
 | Run resumable quote matrix tests | `node scripts/bridge-quote-matrix.mjs --address <wallet> --direction both --output quote-matrix.json --max-tests 25` | See `references/jumper-lifi.md` |
@@ -45,6 +47,12 @@ Quote Pharos PROS to Base PROS using Jumper/LI.FI:
 
 ```bash
 node scripts/bridge-quote.mjs --from pharos --to base --from-token PROS --to-token PROS --amount 0.01 --address 0xYourWallet --output plan.json
+```
+
+Fast safe plan for Pharos USDC to Base USDC:
+
+```bash
+node scripts/bridge-plan-safe.mjs --from pharos --to base --from-token USDC --to-token USDC --amount 0.05 --address 0xYourWallet --output pharos-base-usdc-plan.json
 ```
 
 Discover current Pharos destination support in Jumper/LI.FI:
@@ -83,19 +91,27 @@ Execute a saved plan after review:
 node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_MAINNET_BRIDGE
 ```
 
+If a local policy allows this signer/action/amount, execute still uses `--broadcast` but may omit `--confirm`:
+
+```bash
+node scripts/bridge-execute.mjs --plan plan.json --broadcast
+```
+
 ## Output Rules
 
 - Show source chain, destination chain, source token, destination token, amount, provider, tool, estimated output, fees when available, transaction target, value, gas limit, and approval address.
 - Include status links for Jumper and CCIP when possible.
 - For quotes, show command previews instead of broadcasting.
+- Prefer `bridge-plan-safe.mjs` for user-facing preparation because it combines quote, RPC chain-id, balances, allowance, policy status, and saved plan in one run.
 - For discovery, distinguish `/connections` support from live `/quote` success; a connection can exist while a specific token/amount quote fails.
 - For status, show send tx, receive tx, status, substatus/message, and explorer links.
 - When provider support is missing, say which provider failed and suggest the next provider.
 
 ## Safety
 
-- This skill may build write transactions, but broadcast is disabled unless the user explicitly asks and provides the exact confirmation.
+- This skill may build write transactions, but broadcast is disabled unless the user explicitly asks and provides the exact confirmation or has configured a matching local policy.
 - If no private key source is found, stop before execution and show the local secret-file setup.
+- If neither exact confirmation nor a matching policy is present, stop before execution and show both options.
 - If chain ID returned by RPC does not match the saved plan, stop.
 - If an approval transaction is required, execute it before the bridge transaction and show the approval tx hash.
 - Do not retry bridge broadcasts automatically.

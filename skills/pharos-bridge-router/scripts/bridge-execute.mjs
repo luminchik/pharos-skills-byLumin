@@ -2,6 +2,7 @@
 import {
   castSendPreview,
   calldataSummary,
+  evaluateMainnetAutoConfirm,
   isNativeAddress,
   loadProviders,
   parseArgs,
@@ -9,6 +10,7 @@ import {
   printTable,
   readPrivateKey,
   readJson,
+  readPolicy,
   runCast
 } from "./lib/bridge.mjs";
 
@@ -18,6 +20,7 @@ function usage() {
   node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_MAINNET_BRIDGE
 
 Optional: --private-key-file <path> for local secret-file broadcasts
+Optional: --policy <path> to use a mainnet auto-confirm policy
 
 Without --broadcast this script only validates and prints command previews.`);
 }
@@ -73,13 +76,10 @@ async function main() {
 
   if (!args.broadcast) {
     console.log("");
-    console.log("Dry run only. Add --broadcast --confirm CONFIRM_MAINNET_BRIDGE to execute.");
+    console.log("Dry run only. Add --broadcast --confirm CONFIRM_MAINNET_BRIDGE to execute, or --broadcast with a matching local policy.");
     return;
   }
 
-  if (args.confirm !== "CONFIRM_MAINNET_BRIDGE") {
-    throw new Error("Mainnet bridge execution requires --confirm CONFIRM_MAINNET_BRIDGE");
-  }
   const pk = readPrivateKey(args);
 
   const chainId = runCast(["chain-id", "--rpc-url", rpcUrl]).trim();
@@ -88,6 +88,28 @@ async function main() {
   }
 
   const signer = runCast(["wallet", "address", "--private-key", pk]).trim();
+  if (plan.fromAddress && String(plan.fromAddress).toLowerCase() !== signer.toLowerCase()) {
+    throw new Error(`Plan fromAddress ${plan.fromAddress} does not match signer ${signer}. Refresh the quote with this wallet.`);
+  }
+
+  if (args.confirm !== "CONFIRM_MAINNET_BRIDGE") {
+    const policyCheck = evaluateMainnetAutoConfirm(readPolicy(args), {
+      action: "bridge",
+      signer,
+      fromChainId: plan.fromChain.id,
+      toChainId: plan.toChain.id,
+      tool: plan.tool || "",
+      tokenSymbol: plan.fromToken.symbol,
+      tokenDecimals: plan.fromToken.decimals,
+      amountBase: plan.fromAmount,
+      amountHuman: plan.humanAmount
+    });
+    if (!policyCheck.allowed) {
+      throw new Error(`Mainnet bridge execution requires --confirm CONFIRM_MAINNET_BRIDGE or a matching policy: ${policyCheck.reason}`);
+    }
+    console.log(`Auto-confirm policy: ${policyCheck.reason} (${policyCheck.source})`);
+  }
+
   console.log("");
   console.log(`Signer: ${signer}`);
   console.log(`Source chain ID: ${chainId}`);

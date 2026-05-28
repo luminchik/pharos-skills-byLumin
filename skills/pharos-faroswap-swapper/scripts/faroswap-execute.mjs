@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {
   explorerTx,
+  evaluateMainnetAutoConfirm,
   extractTxHash,
   formatUnits,
   loadPlan,
@@ -8,6 +9,7 @@ import {
   parseCastUint,
   printTable,
   readPrivateKey,
+  readPolicy,
   runCast
 } from "./lib/faroswap.mjs";
 
@@ -16,6 +18,7 @@ function usage() {
   console.log("  node scripts/faroswap-execute.mjs --plan faroswap-plan.json");
   console.log("  node scripts/faroswap-execute.mjs --plan faroswap-plan.json --broadcast --confirm CONFIRM_MAINNET_SWAP");
   console.log("  Optional: --private-key-file <path> for local secret-file broadcasts");
+  console.log("  Optional: --policy <path> to use a mainnet auto-confirm policy");
 }
 
 function requireFresh(plan) {
@@ -23,14 +26,6 @@ function requireFresh(plan) {
   if (Number.isFinite(expires) && Date.now() > expires) {
     throw new Error(`Plan expired at ${plan.expiresAt}. Refresh quote before execution.`);
   }
-}
-
-function confirmBroadcast(args) {
-  if (!args.broadcast) return false;
-  if (args.confirm !== "CONFIRM_MAINNET_SWAP") {
-    throw new Error("Mainnet execution requires --confirm CONFIRM_MAINNET_SWAP");
-  }
-  return true;
 }
 
 function assertChain(plan) {
@@ -112,10 +107,9 @@ try {
     { Field: "Expires", Value: plan.expiresAt }
   ]);
 
-  const broadcast = confirmBroadcast(args);
-  if (!broadcast) {
+  if (!args.broadcast) {
     console.log("");
-    console.log("Dry run only. Add --broadcast --confirm CONFIRM_MAINNET_SWAP to execute.");
+    console.log("Dry run only. Add --broadcast --confirm CONFIRM_MAINNET_SWAP to execute, or --broadcast with a matching local policy.");
     process.exit(0);
   }
 
@@ -125,6 +119,21 @@ try {
   const wallet = deriveWallet(privateKey);
   if (plan.userAddress && !/^0x0{40}$/i.test(plan.userAddress) && plan.userAddress.toLowerCase() !== wallet.toLowerCase()) {
     throw new Error(`Plan was quoted for ${plan.userAddress}, but PRIVATE_KEY resolves to ${wallet}. Refresh the plan with this wallet.`);
+  }
+
+  if (args.confirm !== "CONFIRM_MAINNET_SWAP") {
+    const policyCheck = evaluateMainnetAutoConfirm(readPolicy(args), {
+      action: "swap",
+      signer: wallet,
+      tokenSymbol: plan.fromToken.symbol,
+      tokenDecimals: plan.fromToken.decimals,
+      amountBase: plan.amountInBase,
+      amountHuman: plan.amountIn
+    });
+    if (!policyCheck.allowed) {
+      throw new Error(`Mainnet swap execution requires --confirm CONFIRM_MAINNET_SWAP or a matching policy: ${policyCheck.reason}`);
+    }
+    console.log(`Auto-confirm policy: ${policyCheck.reason} (${policyCheck.source})`);
   }
   console.log(`\nWallet: ${wallet}`);
 

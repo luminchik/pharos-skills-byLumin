@@ -1,8 +1,7 @@
 interface:
   display_name: "Pharos Agent Toolkit"
-  short_description: "Pharos diagnostics, portfolios, and tx debug"
+  short_description: "Pharos diagnostics, portfolios, policy, and tx debug"
   brand_color: "#1D4ED8"
   default_prompt: "Use $pharos-agent-toolkit to inspect my Pharos wallet portfolio and debug recent activity."
 policy:
   allow_implicit_invocation: true
-

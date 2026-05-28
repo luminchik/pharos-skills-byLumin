@@ -40,6 +40,25 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 
 Read-only skills do not need a private key. Write-capable skills require explicit mainnet/testnet confirmation strings before broadcasting.
 
+## Mainnet Auto-Confirm Policy
+
+By default, write-capable skills stop before Pharos mainnet broadcasts unless the exact confirmation string is present. Users can explicitly create a local, time-limited policy that lets allowed scripts omit repeated `CONFIRM_MAINNET_*` strings while still requiring `--broadcast` and enforcing signer/amount limits.
+
+Create a cautious one-hour policy for small bridge and swap tests:
+
+```powershell
+node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --actions bridge,swap --signer 0xYourWallet --expires-minutes 60 --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
+```
+
+Show or disable it:
+
+```powershell
+node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --show
+node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --disable
+```
+
+The default path is `~/.codex/secrets/pharos_policy.json`; it is local and should not be committed.
+
 ## Private Key Setup
 
 Write-capable scripts auto-discover keys in this order:
