@@ -102,11 +102,16 @@ export function printTable(rows) {
 }
 
 export async function fetchJson(url, options = {}) {
+  const providers = loadProviders();
+  const apiKey = process.env.LIFI_API_KEY || process.env.LI_FI_API_KEY || "";
+  const isLifiUrl = String(url).startsWith(providers.lifi.baseUrl);
+  const authHeaders = isLifiUrl && apiKey ? { "x-lifi-api-key": apiKey } : {};
   const response = await fetch(url, {
     ...options,
     headers: {
       accept: "application/json",
       "user-agent": "pharos-bridge-router/0.1.0",
+      ...authHeaders,
       ...(options.headers || {})
     }
   });
@@ -131,7 +136,11 @@ export async function fetchJson(url, options = {}) {
     } catch {
       // keep original text
     }
-    throw new Error(`HTTP ${response.status} from ${url}: ${details}`);
+    const error = new Error(`HTTP ${response.status} from ${url}: ${details}`);
+    error.status = response.status;
+    error.url = url;
+    error.details = details;
+    throw error;
   }
   if (!text) return null;
   return JSON.parse(text);

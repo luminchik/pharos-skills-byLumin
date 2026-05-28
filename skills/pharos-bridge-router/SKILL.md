@@ -30,6 +30,8 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 | --- | --- | --- |
 | Quote Pharos to another chain with Jumper | `node scripts/bridge-quote.mjs --from pharos --to base --from-token PROS --to-token PROS --amount 0.01 --address <wallet>` | See `references/jumper-lifi.md` |
 | Quote another chain back to Pharos | `node scripts/bridge-quote.mjs --from base --to pharos --from-token ETH --to-token PROS --amount 0.001 --address <wallet>` | See `references/jumper-lifi.md` |
+| Discover currently supported Jumper routes | `node scripts/bridge-discover.mjs --from pharos --quotes usdc --address <wallet> --output routes.json` | See `references/jumper-lifi.md` |
+| Run resumable quote matrix tests | `node scripts/bridge-quote-matrix.mjs --address <wallet> --direction both --output quote-matrix.json --max-tests 25` | See `references/jumper-lifi.md` |
 | Save a bridge execution plan | Add `--output plan.json` to `bridge-quote.mjs` | See `references/safety.md` |
 | Execute a saved Jumper plan | `node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_MAINNET_BRIDGE` | See `references/safety.md` |
 | Track a Jumper transaction | `node scripts/bridge-status.mjs --provider lifi --tx <source_tx> --from-chain pharos --to-chain base` | See `references/jumper-lifi.md` |
@@ -43,6 +45,24 @@ Quote Pharos PROS to Base PROS using Jumper/LI.FI:
 
 ```bash
 node scripts/bridge-quote.mjs --from pharos --to base --from-token PROS --to-token PROS --amount 0.01 --address 0xYourWallet --output plan.json
+```
+
+Discover current Pharos destination support in Jumper/LI.FI:
+
+```bash
+node scripts/bridge-discover.mjs --from pharos --quotes none --output pharos-routes.json
+```
+
+Run a rate-limit friendly USDC quote smoke test:
+
+```bash
+node scripts/bridge-discover.mjs --from pharos --quotes usdc --address 0xYourWallet --delay-ms 1500 --output pharos-usdc-routes.json
+```
+
+Run a resumable quote matrix across available Pharos directions:
+
+```bash
+node scripts/bridge-quote-matrix.mjs --address 0xYourWallet --direction both --output pharos-quote-matrix.json --max-tests 25 --delay-ms 1500
 ```
 
 Track a Jumper transaction:
@@ -68,6 +88,7 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_M
 - Show source chain, destination chain, source token, destination token, amount, provider, tool, estimated output, fees when available, transaction target, value, gas limit, and approval address.
 - Include status links for Jumper and CCIP when possible.
 - For quotes, show command previews instead of broadcasting.
+- For discovery, distinguish `/connections` support from live `/quote` success; a connection can exist while a specific token/amount quote fails.
 - For status, show send tx, receive tx, status, substatus/message, and explorer links.
 - When provider support is missing, say which provider failed and suggest the next provider.
 
@@ -78,3 +99,5 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_M
 - If chain ID returned by RPC does not match the saved plan, stop.
 - If an approval transaction is required, execute it before the bridge transaction and show the approval tx hash.
 - Do not retry bridge broadcasts automatically.
+- `bridge-discover.mjs` is read-only, but LI.FI quote tests are rate limited. Prefer `--quotes none` first, use `--delay-ms`, and set `LIFI_API_KEY` or `LI_FI_API_KEY` when available.
+- `bridge-quote-matrix.mjs` is also read-only and resumable. Use `--max-tests` chunks and rerun the same `--output` file until `Pending` is zero.

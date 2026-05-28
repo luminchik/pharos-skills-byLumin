@@ -1,0 +1,13 @@
+{
+  "defaultNetwork": "mainnet",
+  "networks": [
+    {
+      "name": "mainnet",
+      "aliases": ["pharos", "pharos-mainnet", "pros"],
+      "chainId": 1672,
+      "rpcUrl": "https://rpc.pharos.xyz",
+      "explorerUrl": "https://www.pharosscan.xyz",
+      "nativeToken": "PROS"
+    }
+  ]
+}

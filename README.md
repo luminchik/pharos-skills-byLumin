@@ -25,6 +25,7 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 | `pharos-nft-deployer` | ERC721/ERC1155 deployment, image-to-metadata preparation, IPFS metadata upload helper, baseURI/mint command generation | Only for broadcast |
 | `pharos-batch-transfer` | Native/ERC20 batch transfers, airdrops, distributor deployment, `batchTransferUniform(address[],uint256)` workflows | Only for broadcast |
 | `pharos-bridge-router` | Jumper/LI.FI bridge quotes, saved bridge plans, dry-run execution, Jumper status, Transporter/CCIP status, bridge app links | Only for broadcast |
+| `pharos-faroswap-swapper` | Faroswap/DODO quotes, saved swap plans, PROS/WPROS/USDC swaps, wrapping/unwrapping, Faroswap tx decoding | Only for broadcast |
 | `pharos-defi-position-checker` | Native/token/LP/staking/vault/RealFi-style position reports using registry files | No |
 | `pharos-tx-history-summarizer` | Wallet transaction history, gas, success/failure, counterparties, latest activity via public explorer APIs | No |
 
@@ -34,6 +35,8 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 - Foundry `cast` for read/write chain commands
 - Foundry `forge` for contract deployment skills
 - `PRIVATE_KEY` environment variable only when broadcasting transactions
+- Optional `LIFI_API_KEY` or `LI_FI_API_KEY` for higher LI.FI/Jumper route-discovery and quote limits
+- Optional `FAROSWAP_API_KEY` to override the public Faroswap widget quote key
 
 Read-only skills do not need a private key. Write-capable skills require explicit mainnet/testnet confirmation strings before broadcasting.
 
@@ -88,6 +91,7 @@ The repository covers several suggested categories:
 - NFT ownership checker and NFT creator
 - Batch transfer skill
 - Cross-chain bridge skill
+- Smart contract interaction and swap helper
 - DeFi position checker
 - Testnet/mainnet activity helper
 - Onchain analytics skill

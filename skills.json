@@ -33,6 +33,13 @@
       "summary": "Jumper/LI.FI bridge quotes and saved plans plus Transporter/Chainlink CCIP status tracking."
     },
     {
+      "name": "pharos-faroswap-swapper",
+      "path": "skills/pharos-faroswap-swapper",
+      "category": "defi",
+      "write_capable": true,
+      "summary": "Faroswap/DODO quotes, saved swap plans, PROS/WPROS/USDC swaps, wrapping/unwrapping, and tx decoding."
+    },
+    {
       "name": "pharos-defi-position-checker",
       "path": "skills/pharos-defi-position-checker",
       "category": "defi",

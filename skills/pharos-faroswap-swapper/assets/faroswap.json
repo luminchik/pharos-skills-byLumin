@@ -1,0 +1,21 @@
+{
+  "provider": "faroswap-dodo-widget",
+  "siteUrl": "https://faroswap.xyz/swap",
+  "quoteApiUrl": "https://api.dodoex.io/route-service/v2/widget/getdodoroute",
+  "publicWidgetApiKey": "a37546505892e1a952",
+  "source": "dodoV2AndMixWasm",
+  "defaultSlippagePercent": "0.5",
+  "defaultDeadlineMinutes": 20,
+  "router": "0xA5cA5Fbe34e444F366B373170541ec6902b0F75c",
+  "approveSpenderFallback": "0xBF105f4ffBD3825f5433d074008B9A76237d849c",
+  "nativeSentinel": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "knownSelectors": {
+    "0xff84aafa": "mixSwap(address,address,uint256,uint256,uint256,address[],address[],address[],uint256,bytes[],bytes,uint256)",
+    "0xd0e30db0": "deposit()",
+    "0x2e1a7d4d": "withdraw(uint256)"
+  },
+  "knownEvents": {
+    "0x92ceb067a9883c85aba061e46b9edf505a0d6e81927c4b966ebed543a5221787": "OrderHistory(address,address,address,uint256,uint256)",
+    "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": "Transfer(address,address,uint256)"
+  }
+}
