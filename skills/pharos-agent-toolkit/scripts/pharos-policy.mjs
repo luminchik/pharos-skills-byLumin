@@ -21,6 +21,7 @@ function usage() {
   node scripts/pharos-policy.mjs --show
   node scripts/pharos-policy.mjs --enable --actions bridge,swap --signer 0xWallet --expires-minutes 60
   node scripts/pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xWallet
+  node scripts/pharos-policy.mjs --enable --power-user --signer 0xWallet
   node scripts/pharos-policy.mjs --disable
 
 Common limits:
@@ -29,7 +30,12 @@ Common limits:
   --max-swap-usdc 1         Default swap USDC input per tx
   --max-swap-pros 0.01      Default swap PROS input per tx
 
+Power-user mode:
+  --power-user              Permanent mainnet policy for bridge/swap with unlimited token amounts
+  --unlimited               Unlimited token amount policy for the selected actions
+
 Use --permanent or --expires never only when the user explicitly asks for permanent mainnet access. Amount, signer, action, and route limits still apply.
+Use --power-user/--unlimited only when the user explicitly asks for unlimited mainnet access.
 
 Policy path defaults to ~/.codex/secrets/pharos_policy.json or PHAROS_POLICY_FILE.`);
 }
@@ -68,14 +74,16 @@ function resolveSigner(args) {
 
 function buildActions(args) {
   const requested = splitCsv(args.actions, ["bridge", "swap"]).map((item) => item.toLowerCase());
+  const unlimited = isUnlimitedRequest(args);
   const actions = {};
   if (requested.includes("bridge")) {
     actions.bridge = {
       enabled: true,
+      unlimited,
       allowedFromChains: splitNumbers(args["bridge-from"], [1672]),
-      allowedToChains: splitNumbers(args["bridge-to"], [8453]),
+      allowedToChains: splitNumbers(args["bridge-to"], unlimited ? [] : [8453]),
       allowedTools: splitCsv(args["bridge-tools"], []),
-      maxAmount: {
+      maxAmount: unlimited ? "*" : {
         USDC: String(args["max-bridge-usdc"] || "0.10"),
         PROS: String(args["max-bridge-pros"] || "0.01")
       }
@@ -84,7 +92,8 @@ function buildActions(args) {
   if (requested.includes("swap")) {
     actions.swap = {
       enabled: true,
-      maxInputAmount: {
+      unlimited,
+      maxInputAmount: unlimited ? "*" : {
         USDC: String(args["max-swap-usdc"] || "1"),
         PROS: String(args["max-swap-pros"] || "0.01"),
         WPROS: String(args["max-swap-wpros"] || args["max-swap-pros"] || "0.01")
@@ -96,7 +105,12 @@ function buildActions(args) {
 
 function isPermanentRequest(args) {
   const expires = String(args.expires || args.expiry || "").trim().toLowerCase();
-  return args.permanent === true || expires === "never" || expires === "permanent";
+  return args.permanent === true || args["power-user"] === true || expires === "never" || expires === "permanent";
+}
+
+function isUnlimitedRequest(args) {
+  const profile = String(args.profile || "").trim().toLowerCase();
+  return args.unlimited === true || args["power-user"] === true || profile === "power-user" || profile === "unlimited";
 }
 
 function expiryForArgs(args) {
@@ -123,6 +137,10 @@ function formatExpiry(autoConfirm = {}) {
   return autoConfirm.expiresAt || "-";
 }
 
+function isUnlimitedPolicy(autoConfirm = {}) {
+  return Object.values(autoConfirm.actions || {}).some((action) => action?.unlimited === true);
+}
+
 const args = parseArgs(process.argv.slice(2));
 
 try {
@@ -146,6 +164,7 @@ try {
       { Field: "Enabled", Value: String(existing.mainnet?.autoConfirm?.enabled === true) },
       { Field: "Expires", Value: formatExpiry(existing.mainnet?.autoConfirm) },
       { Field: "Signer", Value: existing.mainnet?.autoConfirm?.allowedSigner || "-" },
+      { Field: "Unlimited", Value: String(isUnlimitedPolicy(existing.mainnet?.autoConfirm)) },
       { Field: "Actions", Value: Object.keys(existing.mainnet?.autoConfirm?.actions || {}).join(", ") || "-" }
     ]);
     process.exit(0);
@@ -176,6 +195,7 @@ try {
         permanent: expiry.permanent,
         expiresAt: expiry.expiresAt,
         allowedSigner: signer,
+        profile: args["power-user"] === true ? "power-user" : (isUnlimitedRequest(args) ? "unlimited" : "limited"),
         actions: buildActions(args)
       }
     }
@@ -189,6 +209,7 @@ try {
     { Field: "Enabled", Value: "true" },
     { Field: "Expires", Value: formatExpiry(policy.mainnet.autoConfirm) },
     { Field: "Signer", Value: signer },
+    { Field: "Unlimited", Value: String(isUnlimitedPolicy(policy.mainnet.autoConfirm)) },
     { Field: "Actions", Value: Object.keys(policy.mainnet.autoConfirm.actions).join(", ") }
   ]);
   console.log("");

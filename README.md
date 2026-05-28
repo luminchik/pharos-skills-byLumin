@@ -65,6 +65,14 @@ Permanent local policy is also supported when the user explicitly accepts persis
 node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xYourWallet --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
 ```
 
+Power-user mode is a local opt-in for permanent mainnet access with unlimited token amounts. It is never the repository default, but an agent can configure it after the user explicitly asks:
+
+```powershell
+node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --power-user --signer 0xYourWallet
+```
+
+Even in power-user mode, write scripts still require `--broadcast`, signer checks, and valid saved plans.
+
 ## Private Key Setup
 
 Write-capable scripts auto-discover keys in this order:

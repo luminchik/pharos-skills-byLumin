@@ -474,6 +474,10 @@ function denyAutoConfirm(reason, source = "") {
   return { allowed: false, reason, source };
 }
 
+function isUnlimitedAmountPolicy(value) {
+  return value === true || String(value || "").toLowerCase() === "*" || String(value || "").toLowerCase() === "unlimited";
+}
+
 export function evaluateMainnetAutoConfirm(policy, request) {
   if (!policy) return denyAutoConfirm("no policy file found");
   const source = policy.__source || "policy";
@@ -499,10 +503,25 @@ export function evaluateMainnetAutoConfirm(policy, request) {
     return denyAutoConfirm(`action ${request.action} is not enabled in policy`, source);
   }
 
+  if (actionConfig.unlimited === true || isUnlimitedAmountPolicy(actionConfig.maxInputAmount) || isUnlimitedAmountPolicy(actionConfig.maxAmount)) {
+    return {
+      allowed: true,
+      source,
+      reason: `policy matched ${request.action}: unlimited ${request.tokenSymbol} amount`
+    };
+  }
+
   const limits = actionConfig.maxInputAmount || actionConfig.maxAmount || {};
-  const limit = pickCaseInsensitive(limits, request.tokenSymbol);
+  const limit = typeof limits === "string" ? limits : pickCaseInsensitive(limits, request.tokenSymbol);
   if (limit === undefined) {
     return denyAutoConfirm(`no maxInputAmount policy for ${request.tokenSymbol}`, source);
+  }
+  if (isUnlimitedAmountPolicy(limit)) {
+    return {
+      allowed: true,
+      source,
+      reason: `policy matched ${request.action}: unlimited ${request.tokenSymbol} amount`
+    };
   }
   const limitBase = parseUnits(String(limit), Number(request.tokenDecimals));
   if (BigInt(request.amountBase) > limitBase) {
