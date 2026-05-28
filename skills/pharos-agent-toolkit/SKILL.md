@@ -1,7 +1,7 @@
 ---
 name: pharos-agent-toolkit
 description: >
-  Cross-platform Pharos Agent Center skill for AI agents that need safer, more autonomous Pharos onchain workflows. Use for Pharos environment diagnostics, Foundry/cast setup checks, RPC chain-id validation, wallet portfolio summaries across known Pharos tokens, multi-wallet balance reports, ERC20 allowance audits, approval risk checks, revoke-command generation, NFT ownership checks, ERC721/ERC1155 balance checks, tokenURI/metadata lookup, transaction debugging, receipt/status inspection, calldata selector lookup, event topic summaries, local mainnet auto-confirm policy setup, and preflight planning for Pharos mainnet or Atlantic testnet. Invoke when the user mentions Pharos debugging, tx debug, transaction status, portfolio report, multiple wallets, allowance, approval, revoke, spender risk, NFT ownership, ERC721, ERC1155, tokenURI, metadata, setup doctor, cast/forge health, mainnet confirmation defaults, auto-confirm policy, PHRS, PROS, Atlantic testnet, or Pharos mainnet.
+  Cross-platform Pharos Agent Center skill for AI agents that need safer, more autonomous Pharos onchain workflows. Use for Pharos environment diagnostics, Foundry/cast setup checks, RPC chain-id validation, wallet portfolio summaries across known Pharos tokens, multi-wallet balance reports, ERC20 allowance audits, approval risk checks, revoke-command generation, NFT ownership checks, ERC721/ERC1155 balance checks, tokenURI/metadata lookup, transaction debugging, receipt/status inspection, calldata selector lookup, event topic summaries, local mainnet auto-confirm policy setup including permanent trusted-session policy, and preflight planning for Pharos mainnet or Atlantic testnet. Invoke when the user mentions Pharos debugging, tx debug, transaction status, portfolio report, multiple wallets, allowance, approval, revoke, spender risk, NFT ownership, ERC721, ERC1155, tokenURI, metadata, setup doctor, cast/forge health, mainnet confirmation defaults, permanent mainnet access, auto-confirm policy, PHRS, PROS, Atlantic testnet, or Pharos mainnet.
 ---
 
 # Pharos Agent Toolkit
@@ -32,6 +32,7 @@ Required binary: Foundry `cast`. Optional binaries: `forge` for deploy-oriented 
 | Debug a transaction hash | `node scripts/tx-debug.mjs <tx_hash> --network <network-or-all>` | See `references/tx-debug.md` |
 | Decode common selector/event topic | Use `assets/selectors.json` plus tx debugger output | See `references/tx-debug.md` |
 | Configure local mainnet auto-confirm policy | `node scripts/pharos-policy.mjs --enable --actions bridge,swap --signer <wallet> --expires-minutes 60` | Only when the user explicitly asks |
+| Configure permanent local mainnet policy | `node scripts/pharos-policy.mjs --enable --permanent --actions bridge,swap --signer <wallet> ...limits...` | Only when the user explicitly asks for permanent access |
 
 ## Quick Commands
 
@@ -44,6 +45,7 @@ node scripts/allowance-audit.mjs --owner 0x13e272ed4a94105b1fab86ca878f6d049355c
 node scripts/nft-check.mjs --contract <nft> --owner 0x13e272ed4a94105b1fab86ca878f6d049355c978 --token-id 1 --network mainnet
 node scripts/tx-debug.mjs <tx_hash> --network all
 node scripts/pharos-policy.mjs --enable --actions bridge,swap --signer 0xYourWallet --expires-minutes 60 --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
+node scripts/pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xYourWallet --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
 ```
 
 PowerShell works too:
@@ -66,6 +68,7 @@ node .\scripts\tx-debug.mjs <tx_hash> --network all
 - For allowance audits, explain that spender discovery requires a provided spender list or indexer; plain RPC can only query known owner/spender pairs.
 - For NFT checks, auto-detect ERC721/ERC1155 with ERC165 first; if detection fails, ask whether to retry with `--standard erc721` or `--standard erc1155`.
 - Do not enable a mainnet auto-confirm policy unless the user explicitly asks for default confirmations or trusted session behavior.
+- Use `--permanent` only when the user explicitly asks for permanent access. Keep signer, action, route, and amount limits in the policy.
 
 ## Safety
 

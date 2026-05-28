@@ -59,6 +59,12 @@ node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --disable
 
 The default path is `~/.codex/secrets/pharos_policy.json`; it is local and should not be committed.
 
+Permanent local policy is also supported when the user explicitly accepts persistent mainnet access. It still enforces signer/action/amount/route limits and scripts still require `--broadcast`:
+
+```powershell
+node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xYourWallet --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
+```
+
 ## Private Key Setup
 
 Write-capable scripts auto-discover keys in this order:

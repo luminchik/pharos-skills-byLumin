@@ -20,6 +20,7 @@ function usage() {
   console.log(`Usage:
   node scripts/pharos-policy.mjs --show
   node scripts/pharos-policy.mjs --enable --actions bridge,swap --signer 0xWallet --expires-minutes 60
+  node scripts/pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xWallet
   node scripts/pharos-policy.mjs --disable
 
 Common limits:
@@ -27,6 +28,8 @@ Common limits:
   --bridge-to 8453          Default allowed destination chain IDs
   --max-swap-usdc 1         Default swap USDC input per tx
   --max-swap-pros 0.01      Default swap PROS input per tx
+
+Use --permanent or --expires never only when the user explicitly asks for permanent mainnet access. Amount, signer, action, and route limits still apply.
 
 Policy path defaults to ~/.codex/secrets/pharos_policy.json or PHAROS_POLICY_FILE.`);
 }
@@ -91,6 +94,35 @@ function buildActions(args) {
   return actions;
 }
 
+function isPermanentRequest(args) {
+  const expires = String(args.expires || args.expiry || "").trim().toLowerCase();
+  return args.permanent === true || expires === "never" || expires === "permanent";
+}
+
+function expiryForArgs(args) {
+  if (isPermanentRequest(args)) {
+    return {
+      expiresAt: "",
+      permanent: true
+    };
+  }
+  const expiresMinutes = Number(args["expires-minutes"] || 60);
+  if (!Number.isFinite(expiresMinutes) || expiresMinutes <= 0) {
+    throw new Error("--expires-minutes must be a positive number, or use --permanent / --expires never");
+  }
+  return {
+    expiresAt: new Date(Date.now() + expiresMinutes * 60 * 1000).toISOString(),
+    permanent: false
+  };
+}
+
+function formatExpiry(autoConfirm = {}) {
+  if (autoConfirm.permanent === true || (!autoConfirm.expiresAt && autoConfirm.enabled === true)) {
+    return "never (permanent)";
+  }
+  return autoConfirm.expiresAt || "-";
+}
+
 const args = parseArgs(process.argv.slice(2));
 
 try {
@@ -112,7 +144,7 @@ try {
     printTable([
       { Field: "Path", Value: policyPath },
       { Field: "Enabled", Value: String(existing.mainnet?.autoConfirm?.enabled === true) },
-      { Field: "Expires", Value: existing.mainnet?.autoConfirm?.expiresAt || "-" },
+      { Field: "Expires", Value: formatExpiry(existing.mainnet?.autoConfirm) },
       { Field: "Signer", Value: existing.mainnet?.autoConfirm?.allowedSigner || "-" },
       { Field: "Actions", Value: Object.keys(existing.mainnet?.autoConfirm?.actions || {}).join(", ") || "-" }
     ]);
@@ -132,10 +164,8 @@ try {
     process.exit(0);
   }
 
-  const expiresMinutes = Number(args["expires-minutes"] || 60);
-  if (!Number.isFinite(expiresMinutes) || expiresMinutes <= 0) throw new Error("--expires-minutes must be a positive number");
   const signer = resolveSigner(args);
-  const expiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000).toISOString();
+  const expiry = expiryForArgs(args);
 
   const policy = {
     version: 1,
@@ -143,7 +173,8 @@ try {
     mainnet: {
       autoConfirm: {
         enabled: true,
-        expiresAt,
+        permanent: expiry.permanent,
+        expiresAt: expiry.expiresAt,
         allowedSigner: signer,
         actions: buildActions(args)
       }
@@ -156,7 +187,7 @@ try {
   printTable([
     { Field: "Path", Value: policyPath },
     { Field: "Enabled", Value: "true" },
-    { Field: "Expires", Value: expiresAt },
+    { Field: "Expires", Value: formatExpiry(policy.mainnet.autoConfirm) },
     { Field: "Signer", Value: signer },
     { Field: "Actions", Value: Object.keys(policy.mainnet.autoConfirm.actions).join(", ") }
   ]);
