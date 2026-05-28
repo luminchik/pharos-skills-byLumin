@@ -14,7 +14,7 @@ Required binaries: Foundry `cast` and `forge`. Required runtime: Node.js.
 
 - Read network/token data from `assets/networks.json` and `assets/tokens.json`.
 - Default to `atlantic-testnet`; treat `mainnet` as production.
-- Never print or store private keys. Broadcast commands read `PRIVATE_KEY` from the local environment.
+- Never print or store private keys. Broadcast commands auto-discover `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Always run a dry-run plan before broadcast.
 - Mainnet writes require exact confirmation:
   - transfers: `CONFIRM_MAINNET_BATCH_TRANSFER`

@@ -9,8 +9,8 @@ Use this workflow when the user asks whether Pharos tooling works, when `cast` i
 3. Confirm `forge` is found when deployment or verification is expected.
 4. Query every network in `assets/networks.json` with `cast chain-id --rpc-url <rpc>`.
 5. Compare returned chain id to configured `chainId`.
-6. Detect whether `PRIVATE_KEY` is set without printing it.
-7. If set, derive the public address with `cast wallet address --private-key <value>`.
+6. Detect whether `PRIVATE_KEY` or a standard local key file exists without printing it.
+7. If found, derive the public address with `cast wallet address --private-key <redacted>`.
 
 ## Expected Result
 
@@ -20,7 +20,7 @@ The final output should clearly show:
 - `cast` status.
 - `forge` status.
 - RPC status for `atlantic-testnet` and `mainnet`.
-- Private key status: set/not set.
+- Private key status: found/not found and derived signer address when possible.
 
 ## Error Recovery
 

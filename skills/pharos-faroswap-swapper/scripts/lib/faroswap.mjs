@@ -175,6 +175,39 @@ export function findBinary(name) {
   return candidates.find(fileExists) || null;
 }
 
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+export function defaultPrivateKeyPaths() {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  return unique([
+    process.env.PHAROS_PRIVATE_KEY_FILE,
+    process.env.CODEX_HOME ? path.join(process.env.CODEX_HOME, "secrets", "pharos_private_key.txt") : "",
+    home ? path.join(home, ".codex", "secrets", "pharos_private_key.txt") : "",
+    home ? path.join(home, ".pharos", "private_key") : ""
+  ]);
+}
+
+function normalizePrivateKey(value, source = "private key") {
+  const trimmed = String(value || "").trim();
+  if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) return trimmed;
+  if (/^[a-fA-F0-9]{64}$/.test(trimmed)) return `0x${trimmed}`;
+  throw new Error(`${source} is not a 32-byte hex private key`);
+}
+
+export function privateKeySetupMessage() {
+  const winPath = "$env:USERPROFILE\\.codex\\secrets\\pharos_private_key.txt";
+  const unixPath = "~/.codex/secrets/pharos_private_key.txt";
+  return [
+    "Private key not found. Faroswap quotes are still available.",
+    "For swap broadcasts, set PRIVATE_KEY locally or create a local secret file:",
+    `- Windows PowerShell: New-Item -ItemType Directory -Force "$env:USERPROFILE\\.codex\\secrets" | Out-Null; Set-Content -NoNewline "${winPath}" "0xYOUR_PRIVATE_KEY"`,
+    `- macOS/Linux: mkdir -p ~/.codex/secrets && printf "0xYOUR_PRIVATE_KEY" > ${unixPath} && chmod 600 ${unixPath}`,
+    "Never paste or print private keys in chat."
+  ].join("\n");
+}
+
 export function runCast(args, options = {}) {
   const binary = findBinary("cast");
   if (!binary) throw new Error("Foundry cast was not found. Install Foundry before executing or decoding swaps.");
@@ -390,15 +423,19 @@ export function planRows(plan) {
   ];
 }
 
-export function readPrivateKey(args) {
+export function readPrivateKey(args = {}) {
   if (args["private-key-file"]) {
-    const value = fs.readFileSync(path.resolve(args["private-key-file"]), "utf8").trim();
-    if (!value) throw new Error(`Private key file is empty: ${args["private-key-file"]}`);
-    return value;
+    const filePath = path.resolve(args["private-key-file"]);
+    if (!fileExists(filePath)) throw new Error(`Private key file not found: ${filePath}`);
+    return normalizePrivateKey(fs.readFileSync(filePath, "utf8"), `Private key file ${filePath}`);
   }
-  const value = process.env.PRIVATE_KEY || "";
-  if (!value) throw new Error("PRIVATE_KEY is not set. Use PRIVATE_KEY env var or --private-key-file.");
-  return value.trim();
+  if (process.env.PRIVATE_KEY) return normalizePrivateKey(process.env.PRIVATE_KEY, "PRIVATE_KEY");
+  for (const filePath of defaultPrivateKeyPaths()) {
+    if (fileExists(filePath)) {
+      return normalizePrivateKey(fs.readFileSync(filePath, "utf8"), `Private key file ${filePath}`);
+    }
+  }
+  throw new Error(privateKeySetupMessage());
 }
 
 export function loadPlan(planPath) {

@@ -15,7 +15,7 @@ Required binary: Foundry `cast`. Optional binaries: `forge` for deploy-oriented 
 - Use Foundry `cast` for chain reads. Do not use raw JSON-RPC unless the user explicitly asks for fallback diagnostics.
 - Read network and token data from `assets/networks.json` and `assets/tokens.json`.
 - Default network is `atlantic-testnet`; support `mainnet` only when requested or when auto-detecting a transaction.
-- Never print private keys. This skill is primarily read-only; if a later workflow needs writes, follow the official engine's confirmation rules.
+- Never print private keys. The doctor may detect `PRIVATE_KEY` or standard local key files only to derive the public signer address.
 - Be OS-aware. On Windows, PowerShell commands use `$env:PRIVATE_KEY`; on bash/zsh, use `$PRIVATE_KEY`.
 
 ## Capability Index

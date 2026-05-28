@@ -34,11 +34,38 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 - Node.js 18+
 - Foundry `cast` for read/write chain commands
 - Foundry `forge` for contract deployment skills
-- `PRIVATE_KEY` environment variable only when broadcasting transactions
+- A local private key source only when broadcasting transactions
 - Optional `LIFI_API_KEY` or `LI_FI_API_KEY` for higher LI.FI/Jumper route-discovery and quote limits
 - Optional `FAROSWAP_API_KEY` to override the public Faroswap widget quote key
 
 Read-only skills do not need a private key. Write-capable skills require explicit mainnet/testnet confirmation strings before broadcasting.
+
+## Private Key Setup
+
+Write-capable scripts auto-discover keys in this order:
+
+1. `--private-key-file <path>` when the script supports it
+2. `PRIVATE_KEY`
+3. `PHAROS_PRIVATE_KEY_FILE`
+4. `~/.codex/secrets/pharos_private_key.txt`
+5. `~/.pharos/private_key`
+
+If no key is found, the scripts stop before broadcast and print setup steps. They never print the key.
+
+Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\secrets" | Out-Null
+Set-Content -NoNewline -Path "$env:USERPROFILE\.codex\secrets\pharos_private_key.txt" -Value "0xYOUR_PRIVATE_KEY"
+```
+
+macOS/Linux:
+
+```bash
+mkdir -p ~/.codex/secrets
+printf "0xYOUR_PRIVATE_KEY" > ~/.codex/secrets/pharos_private_key.txt
+chmod 600 ~/.codex/secrets/pharos_private_key.txt
+```
 
 ## Install
 
@@ -62,6 +89,17 @@ copy skills/<skill-name> to:
   Claude Code: ~/.claude/skills/<skill-name>
   OpenClaw:    ~/.openclaw/skills/<skill-name>
 ```
+
+## Update Installed Skills
+
+Skills are local files; agent runtimes do not auto-pull this GitHub repository. To update after the repo changes:
+
+```powershell
+git pull
+.\scripts\install-codex.ps1
+```
+
+Then restart Codex or run `/skills` to refresh the skill list.
 
 ## Validate
 

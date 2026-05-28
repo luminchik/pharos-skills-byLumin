@@ -8,6 +8,7 @@ import {
   parseArgs,
   parseTxHash,
   printTable,
+  readPrivateKey,
   runCast,
   shellQuote
 } from "./lib/pharos.mjs";
@@ -16,6 +17,7 @@ function usage() {
   console.log("Usage:");
   console.log("  node scripts/batch-transfer.mjs --asset native --mode distributor --distributor <addr> --amount 0.05 --input recipients.csv --network mainnet");
   console.log("  node scripts/batch-transfer.mjs ... --broadcast --confirm CONFIRM_MAINNET_BATCH_TRANSFER");
+  console.log("  Optional: --private-key-file <path> for local secret-file broadcasts");
 }
 
 function verifyChain(network) {
@@ -127,13 +129,12 @@ try {
     process.exit(0);
   }
 
-  const privateKey = process.env.PRIVATE_KEY || "";
-  if (!privateKey) throw new Error("PRIVATE_KEY must be set for --broadcast");
   const expectedConfirm = plan.network.environment === "mainnet"
     ? "CONFIRM_MAINNET_BATCH_TRANSFER"
     : "CONFIRM_TESTNET_BATCH_TRANSFER";
   if (args.confirm !== expectedConfirm) throw new Error(`--broadcast requires --confirm ${expectedConfirm}`);
 
+  const privateKey = readPrivateKey(args);
   const chainId = verifyChain(plan.network);
   const signer = getSigner(privateKey);
   const nativeBalance = getNativeBalance(plan.network, signer);

@@ -4,6 +4,7 @@ import {
   isAddress,
   parseArgs,
   printTable,
+  readPrivateKey,
   runCast,
   selectNetwork,
   shellQuote
@@ -23,6 +24,7 @@ function usage() {
   console.log("  --network <name>                Default: atlantic-testnet");
   console.log("  --broadcast                     Execute writes; otherwise print commands only");
   console.log("  --confirm <text>                CONFIRM_TESTNET_NFT_WRITE or CONFIRM_MAINNET_NFT_WRITE");
+  console.log("  --private-key-file <path>       Optional local secret file for broadcasts");
 }
 
 function normalizeAddress(value) {
@@ -134,16 +136,12 @@ try {
     process.exit(0);
   }
 
-  const privateKey = process.env.PRIVATE_KEY || "";
-  if (!privateKey) {
-    throw new Error("PRIVATE_KEY must be set for --broadcast");
-  }
-
   const expectedConfirm = network.environment === "mainnet" ? "CONFIRM_MAINNET_NFT_WRITE" : "CONFIRM_TESTNET_NFT_WRITE";
   if (args.confirm !== expectedConfirm) {
     throw new Error(`--broadcast requires --confirm ${expectedConfirm}`);
   }
 
+  const privateKey = readPrivateKey(args);
   const check = preflight(network, contract, privateKey);
   console.log("Broadcast preflight:");
   printTable([

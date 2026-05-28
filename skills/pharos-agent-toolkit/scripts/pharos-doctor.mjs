@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {
+  discoverPrivateKey,
   findBinary,
   loadNetworks,
   printTable,
@@ -74,17 +75,17 @@ for (const network of config.networks) {
 printTable(networkRows);
 console.log("");
 
-const privateKey = process.env.PRIVATE_KEY || "";
+const privateKey = discoverPrivateKey();
 if (!privateKey) {
-  console.log("PRIVATE_KEY: not set");
+  console.log("Private key: not found; read-only workflows are available");
 } else if (!hasCast) {
-  console.log("PRIVATE_KEY: set, address derivation skipped because cast is missing");
+  console.log(`Private key: found in ${privateKey.source}, address derivation skipped because cast is missing`);
 } else {
   try {
-    const address = runCast(["wallet", "address", "--private-key", privateKey]);
-    console.log(`PRIVATE_KEY: set, derived address ${address}`);
+    const address = runCast(["wallet", "address", "--private-key", privateKey.value]);
+    console.log(`Private key: found in ${privateKey.source}, derived address ${address}`);
   } catch (error) {
-    console.log(`PRIVATE_KEY: set, address derivation failed: ${error.message}`);
+    console.log(`Private key: found in ${privateKey.source}, address derivation failed: ${error.message}`);
   }
 }
 

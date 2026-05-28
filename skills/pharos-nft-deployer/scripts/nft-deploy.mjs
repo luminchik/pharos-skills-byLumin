@@ -9,6 +9,7 @@ import {
   isAddress,
   parseArgs,
   printTable,
+  readPrivateKey,
   runCast,
   runForge,
   selectNetwork,
@@ -49,6 +50,7 @@ function usage() {
   console.log("  --project <dir>                 Generated Foundry workspace. Default: OS temp directory");
   console.log("  --broadcast                     Actually send deployment transaction");
   console.log("  --confirm <text>                Required with --broadcast. Use CONFIRM_TESTNET_DEPLOY or CONFIRM_MAINNET_DEPLOY");
+  console.log("  --private-key-file <path>       Optional local secret file for broadcasts");
 }
 
 function requireString(value, label) {
@@ -58,10 +60,13 @@ function requireString(value, label) {
   return String(value);
 }
 
-function deriveOwnerFromPrivateKey() {
-  const privateKey = process.env.PRIVATE_KEY || "";
-  if (!privateKey) return "";
-  return runCast(["wallet", "address", "--private-key", privateKey]);
+function deriveOwnerFromPrivateKey(args) {
+  try {
+    const privateKey = readPrivateKey(args);
+    return runCast(["wallet", "address", "--private-key", privateKey]);
+  } catch {
+    return "";
+  }
 }
 
 function verifyRpcChain(network) {
@@ -137,8 +142,7 @@ try {
 
   const network = selectNetwork(args.network || undefined);
   const contractInfo = CONTRACTS[standard];
-  const privateKey = process.env.PRIVATE_KEY || "";
-  const owner = args.owner || deriveOwnerFromPrivateKey();
+  const owner = args.owner || deriveOwnerFromPrivateKey(args);
   if (!owner || !isAddress(owner)) {
     usage();
     throw new Error("--owner is required when PRIVATE_KEY is not set, and it must be an EVM address");
@@ -208,15 +212,12 @@ try {
     process.exit(0);
   }
 
-  if (!privateKey) {
-    throw new Error("PRIVATE_KEY must be set for --broadcast");
-  }
-
   const expectedConfirm = network.environment === "mainnet" ? "CONFIRM_MAINNET_DEPLOY" : "CONFIRM_TESTNET_DEPLOY";
   if (args.confirm !== expectedConfirm) {
     throw new Error(`--broadcast requires --confirm ${expectedConfirm}`);
   }
 
+  const privateKey = readPrivateKey(args);
   const returnedChainId = verifyRpcChain(network);
   const preflight = getDeployerPreflight(privateKey, network);
   console.log("");

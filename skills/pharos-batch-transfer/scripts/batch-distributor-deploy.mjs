@@ -9,6 +9,7 @@ import {
   parseArgs,
   parseTxHash,
   printTable,
+  readPrivateKey,
   runCast,
   runForge,
   selectNetwork,
@@ -19,6 +20,7 @@ function usage() {
   console.log("Usage:");
   console.log("  node scripts/batch-distributor-deploy.mjs --network mainnet");
   console.log("  node scripts/batch-distributor-deploy.mjs --network mainnet --broadcast --confirm CONFIRM_MAINNET_BATCH_DEPLOY");
+  console.log("  Optional: --private-key-file <path> for local secret-file broadcasts");
 }
 
 function writeFoundryProject(projectDir) {
@@ -84,11 +86,10 @@ try {
     process.exit(0);
   }
 
-  const privateKey = process.env.PRIVATE_KEY || "";
-  if (!privateKey) throw new Error("PRIVATE_KEY must be set for --broadcast");
   const expectedConfirm = network.environment === "mainnet" ? "CONFIRM_MAINNET_BATCH_DEPLOY" : "CONFIRM_TESTNET_BATCH_DEPLOY";
   if (args.confirm !== expectedConfirm) throw new Error(`--broadcast requires --confirm ${expectedConfirm}`);
 
+  const privateKey = readPrivateKey(args);
   const chainId = verifyChain(network);
   const signer = runCast(["wallet", "address", "--private-key", privateKey]).trim();
   const balance = runCast(["balance", signer, "--rpc-url", network.rpcUrl, "--ether"]).trim();

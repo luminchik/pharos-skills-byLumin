@@ -7,6 +7,7 @@ import {
   parseArgs,
   planAgeSeconds,
   printTable,
+  readPrivateKey,
   readJson,
   runCast
 } from "./lib/bridge.mjs";
@@ -16,11 +17,9 @@ function usage() {
   node scripts/bridge-execute.mjs --plan plan.json
   node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_MAINNET_BRIDGE
 
-Without --broadcast this script only validates and prints command previews.`);
-}
+Optional: --private-key-file <path> for local secret-file broadcasts
 
-function privateKey() {
-  return process.env.PRIVATE_KEY || "";
+Without --broadcast this script only validates and prints command previews.`);
 }
 
 function requireFreshPlan(plan, maxAgeSeconds) {
@@ -81,8 +80,7 @@ async function main() {
   if (args.confirm !== "CONFIRM_MAINNET_BRIDGE") {
     throw new Error("Mainnet bridge execution requires --confirm CONFIRM_MAINNET_BRIDGE");
   }
-  const pk = privateKey();
-  if (!pk) throw new Error("PRIVATE_KEY is not set");
+  const pk = readPrivateKey(args);
 
   const chainId = runCast(["chain-id", "--rpc-url", rpcUrl]).trim();
   if (String(chainId) !== String(plan.fromChain.id)) {

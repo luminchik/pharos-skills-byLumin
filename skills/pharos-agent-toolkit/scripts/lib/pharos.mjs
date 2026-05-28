@@ -106,6 +106,62 @@ export function findBinary(name) {
   return candidates.find(fileExists) || null;
 }
 
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+export function defaultPrivateKeyPaths() {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  return unique([
+    process.env.PHAROS_PRIVATE_KEY_FILE,
+    process.env.CODEX_HOME ? path.join(process.env.CODEX_HOME, "secrets", "pharos_private_key.txt") : "",
+    home ? path.join(home, ".codex", "secrets", "pharos_private_key.txt") : "",
+    home ? path.join(home, ".pharos", "private_key") : ""
+  ]);
+}
+
+function normalizePrivateKey(value, source = "private key") {
+  const trimmed = String(value || "").trim();
+  if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) return trimmed;
+  if (/^[a-fA-F0-9]{64}$/.test(trimmed)) return `0x${trimmed}`;
+  throw new Error(`${source} is not a 32-byte hex private key`);
+}
+
+export function discoverPrivateKey() {
+  if (process.env.PRIVATE_KEY) {
+    return { value: normalizePrivateKey(process.env.PRIVATE_KEY, "PRIVATE_KEY"), source: "PRIVATE_KEY" };
+  }
+  for (const filePath of defaultPrivateKeyPaths()) {
+    if (fileExists(filePath)) {
+      return {
+        value: normalizePrivateKey(fs.readFileSync(filePath, "utf8"), `Private key file ${filePath}`),
+        source: filePath
+      };
+    }
+  }
+  return null;
+}
+
+function redactText(value) {
+  return String(value).replace(/0x[a-fA-F0-9]{64}/g, "<redacted-private-key>");
+}
+
+function redactArgs(args) {
+  let redactNext = false;
+  return args.map((arg) => {
+    if (redactNext) {
+      redactNext = false;
+      return "<redacted>";
+    }
+    if (arg === "--private-key") {
+      redactNext = true;
+      return arg;
+    }
+    if (String(arg).startsWith("--private-key=")) return "--private-key=<redacted>";
+    return redactText(arg);
+  });
+}
+
 export function runBinary(name, args, options = {}) {
   const binary = findBinary(name);
   if (!binary) {
@@ -128,8 +184,8 @@ export function runBinary(name, args, options = {}) {
   const stderr = (result.stderr || "").trim();
 
   if (result.status !== 0) {
-    const details = stderr || stdout || `exit code ${result.status}`;
-    const error = new Error(`${name} ${args.join(" ")} failed: ${details}`);
+    const details = redactText(stderr || stdout || `exit code ${result.status}`);
+    const error = new Error(`${name} ${redactArgs(args).join(" ")} failed: ${details}`);
     error.stdout = stdout;
     error.stderr = stderr;
     error.status = result.status;

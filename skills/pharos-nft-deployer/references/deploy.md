@@ -62,7 +62,7 @@ constructor(
 
 ## Broadcast
 
-Set `PRIVATE_KEY` locally, never in chat.
+Use a local private key source, never chat. The scripts try `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 
 Bash/zsh:
 
@@ -74,6 +74,19 @@ PowerShell:
 
 ```powershell
 $env:PRIVATE_KEY="0x..."
+```
+
+Persistent local secret file:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\secrets" | Out-Null
+Set-Content -NoNewline "$env:USERPROFILE\.codex\secrets\pharos_private_key.txt" "0xYOUR_PRIVATE_KEY"
+```
+
+```bash
+mkdir -p ~/.codex/secrets
+printf "0xYOUR_PRIVATE_KEY" > ~/.codex/secrets/pharos_private_key.txt
+chmod 600 ~/.codex/secrets/pharos_private_key.txt
 ```
 
 Then rerun with `--broadcast` and exact confirmation:

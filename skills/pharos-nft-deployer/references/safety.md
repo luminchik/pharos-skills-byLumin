@@ -6,8 +6,8 @@ NFT deployment is a write operation.
 
 Before broadcast:
 
-1. Confirm `PRIVATE_KEY` is set locally and never printed.
-2. Derive deployer address with `cast wallet address --private-key`.
+1. Confirm a private key source exists locally and never print it. Scripts try `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
+2. Derive deployer address with `cast wallet address --private-key <redacted>`.
 3. Verify RPC chain ID matches the configured network.
 4. Confirm target network:
    - `atlantic-testnet` uses `PHRS`.

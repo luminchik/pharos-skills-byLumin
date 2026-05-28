@@ -14,7 +14,7 @@ Required binaries: Foundry `forge` and `cast`. Required runtime: Node.js.
 
 - Default to `atlantic-testnet`.
 - Treat `mainnet` as production and require explicit confirmation before broadcast.
-- Never print or store private keys.
+- Never print or store private keys. Write scripts auto-discover `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - When the user provides an image, first prepare metadata; do not claim the NFT has an image until token metadata is uploaded and `setBaseURI` plus mint are completed.
 - Build first with `forge build`; do not broadcast until build succeeds.
 - Before broadcast, verify RPC chain ID, derive the deployer, and check deployer native balance.
@@ -55,11 +55,13 @@ Broadcast to Atlantic testnet only after setting `PRIVATE_KEY`:
 node scripts/nft-deploy.mjs --standard erc721 --name "Demo NFT" --symbol DNFT --base-uri "ipfs://CID/" --network atlantic-testnet --broadcast --confirm CONFIRM_TESTNET_DEPLOY
 ```
 
-PowerShell uses the same Node commands; set private key with:
+PowerShell uses the same Node commands. For one session set:
 
 ```powershell
 $env:PRIVATE_KEY="0x..."
 ```
+
+For persistent local setup, create `~/.codex/secrets/pharos_private_key.txt`; write scripts will find it automatically.
 
 Image to ERC721 metadata bundle:
 
@@ -79,7 +81,7 @@ node scripts/nft-erc721-write.mjs --contract 0xYourCollection --set-base-uri ipf
 - Show network, chain ID, native token, owner, constructor signature, and calldata file.
 - Show preview deploy commands for bash/zsh and PowerShell.
 - If broadcast succeeds, show contract explorer link.
-- If `PRIVATE_KEY` is missing or the deployer has zero native balance, stop before broadcast and explain the next step.
+- If no private key source is found or the deployer has zero native balance, stop before broadcast and explain the next step.
 - For image workflows, show token metadata path, collection metadata path, image URI, and the exact `setBaseURI` value.
 - For IPFS uploads, require `--allow-public-upload`, then show root CID, `ipfs://.../` baseURI, and gateway URL.
 
@@ -89,4 +91,4 @@ node scripts/nft-erc721-write.mjs --contract 0xYourCollection --set-base-uri ipf
 - Do not auto-mint after deployment unless the user explicitly asks and confirms.
 - Do not execute metadata or mint writes on mainnet without exact `--confirm CONFIRM_MAINNET_NFT_WRITE`.
 - Do not upload user images to third-party pinning services unless the user explicitly asked to proceed, chose that service, or provided credentials.
-- Do not accept private keys in chat; instruct the user to set `PRIVATE_KEY` locally.
+- Do not accept private keys in chat; instruct the user to set a local secret file or `PRIVATE_KEY` locally.

@@ -16,7 +16,7 @@ Required binaries: Node.js. Required for execution and transaction inspection: F
 - Use Faroswap/DODO quote output for `to`, `data`, `value`, `minReturnAmount`, and approval spender. Do not hand-build router calldata when the API is available.
 - Never broadcast directly from a chat answer. Save a plan first, then execute the saved plan.
 - Mainnet swap execution requires `--broadcast --confirm CONFIRM_MAINNET_SWAP`.
-- Never print or store private keys. Execution reads `PRIVATE_KEY` or `--private-key-file`.
+- Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - For ERC20 inputs, approve only the exact planned amount to the quote's `targetApproveAddr`.
 - If an existing ERC20 allowance is larger than needed, reset it and approve the exact amount unless the user explicitly passes `--keep-existing-allowance`.
 - Refresh quotes before execution if a plan is older than 10 minutes.

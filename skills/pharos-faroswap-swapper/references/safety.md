@@ -6,5 +6,5 @@
 - Refresh the plan if it is older than 10 minutes.
 - Approve only the exact input amount returned in the plan unless the user explicitly asks otherwise.
 - If an ERC20 allowance is non-zero and not exactly equal to the required amount, reset allowance to zero before approving the exact amount. Use `--keep-existing-allowance` only when the user explicitly accepts a larger existing allowance.
-- Never print private keys. `faroswap-execute.mjs` reads `PRIVATE_KEY` or `--private-key-file`.
+- Never print private keys. `faroswap-execute.mjs` tries `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Never retry broadcasts automatically. If a swap or approval fails, inspect the receipt/revert before trying again.

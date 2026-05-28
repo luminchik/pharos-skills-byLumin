@@ -15,6 +15,7 @@ function usage() {
   console.log("Usage:");
   console.log("  node scripts/faroswap-execute.mjs --plan faroswap-plan.json");
   console.log("  node scripts/faroswap-execute.mjs --plan faroswap-plan.json --broadcast --confirm CONFIRM_MAINNET_SWAP");
+  console.log("  Optional: --private-key-file <path> for local secret-file broadcasts");
 }
 
 function requireFresh(plan) {

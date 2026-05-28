@@ -18,7 +18,7 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 - Default source chain is Pharos mainnet (`1672`) only when the user clearly asks for Pharos bridging.
 - Never broadcast directly from a quote. Save a plan first, then execute the saved plan.
 - Mainnet bridge execution requires `--broadcast --confirm CONFIRM_MAINNET_BRIDGE`.
-- Never print or store private keys. Execution reads `PRIVATE_KEY` from the local environment.
+- Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Refresh quotes before execution if the saved plan is older than 10 minutes.
 - For ERC20 routes, approve only the exact quoted amount unless the user explicitly asks for another allowance.
 - Treat Transporter as CCIP-backed. Use Chainlink CCIP message status for tracking.
@@ -95,7 +95,7 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_M
 ## Safety
 
 - This skill may build write transactions, but broadcast is disabled unless the user explicitly asks and provides the exact confirmation.
-- If `PRIVATE_KEY` is missing, stop before execution and show how to set it.
+- If no private key source is found, stop before execution and show the local secret-file setup.
 - If chain ID returned by RPC does not match the saved plan, stop.
 - If an approval transaction is required, execute it before the bridge transaction and show the approval tx hash.
 - Do not retry bridge broadcasts automatically.
