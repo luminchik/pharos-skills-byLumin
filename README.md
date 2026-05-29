@@ -1,50 +1,128 @@
-# Pharos Agent Center Skills
+# Pharos Agent Center Skills by Lumin
 
-Portable Pharos skills for AI agents that need useful onchain and developer workflows on Pharos mainnet and Pharos Atlantic testnet.
+Portable Pharos skills for AI agents.
 
-This repository follows the skill layout used by agent runtimes:
+This pack helps agents inspect wallets, summarize activity, check DeFi positions,
+deploy NFTs, run batch transfers, quote Faroswap swaps, prepare bridge routes,
+and debug Pharos transactions.
+
+Built for the Pharos Agent Center Skill Builder Campaign and designed to work
+with Codex, Claude Code, OpenClaw, and other runtimes that load `SKILL.md`
+folders.
+
+## What's Inside
+
+| Skill | What it does |
+| --- | --- |
+| `pharos-agent-toolkit` | Wallet portfolio, allowance audits, NFT checks, tx debugging, Pharos setup doctor |
+| `pharos-faroswap-swapper` | Faroswap quotes, safe swaps, buy target amount, wrap/unwrap PROS |
+| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, route discovery, safety checks, CCIP/Transporter status |
+| `pharos-nft-deployer` | ERC721/ERC1155 deploy, image metadata, IPFS helper, mint/baseURI workflows |
+| `pharos-batch-transfer` | Native/ERC20 batch sends, airdrops, distributor workflows |
+| `pharos-defi-position-checker` | Token balances, Faroswap V3 LP NFTs, AquaFlux market positions |
+| `pharos-tx-history-summarizer` | Explorer-backed wallet activity, gas, counterparties, latest tx summaries |
+
+Each skill is self-contained:
 
 ```text
-skills/
-  pharos-agent-toolkit/
-    SKILL.md
-    assets/
-    references/
-    scripts/
+skills/<skill-name>/
+  SKILL.md
+  assets/
+  references/
+  scripts/
 ```
-
-Each skill is self-contained. The `SKILL.md` file describes when the agent should use the skill, and the bundled scripts/assets provide deterministic commands instead of fragile prompt-only instructions.
-
-This repository does not vendor the official `pharos-skill-engine`; it uses that project as the compatibility reference and adds separate contest skills around it.
-
-## Skills
-
-| Skill | Purpose | Private key required |
-| --- | --- | --- |
-| `pharos-agent-toolkit` | Environment doctor, wallet portfolio summaries, ERC20 allowance audits, NFT ownership checks, transaction debugging, selector/event summaries | No for reads |
-| `pharos-nft-deployer` | ERC721/ERC1155 deployment, image-to-metadata preparation, IPFS metadata upload helper, baseURI/mint command generation | Only for broadcast |
-| `pharos-batch-transfer` | Native/ERC20 batch transfers, airdrops, distributor deployment, `batchTransferUniform(address[],uint256)` workflows | Only for broadcast |
-| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, saved bridge plans, dry-run execution, Jumper status, Transporter/CCIP status, bridge app links | Only for broadcast |
-| `pharos-faroswap-swapper` | Faroswap/DODO quotes, saved swap plans, PROS/WPROS/USDC swaps, wrapping/unwrapping, Faroswap tx decoding | Only for broadcast |
-| `pharos-defi-position-checker` | Native/token/LP/staking/vault/RealFi reports, Faroswap V3 LP NFT decode, and AquaFlux P/AQ/S/RWA/LP positions | No |
-| `pharos-tx-history-summarizer` | Wallet transaction history, gas, success/failure, counterparties, latest activity via public explorer APIs | No |
 
 ## Requirements
 
 - Node.js 18+
-- Foundry `cast` for read/write chain commands
-- Foundry `forge` for contract deployment skills
-- A local private key source only when broadcasting transactions
-- Optional `LIFI_API_KEY` or `LI_FI_API_KEY` for higher LI.FI/Jumper route-discovery and quote limits
-- Optional `FAROSWAP_API_KEY` to override the public Faroswap widget quote key
+- Foundry `cast`
+- Foundry `forge` for NFT and contract deployment workflows
+- Optional: `LIFI_API_KEY` or `LI_FI_API_KEY` for higher Jumper/LI.FI limits
+- Optional: `FAROSWAP_API_KEY` for Faroswap quote API override
 
-Read-only skills do not need a private key. Write-capable skills require explicit mainnet/testnet confirmation strings before broadcasting.
+Read-only skills do not need a private key.
 
-## Mainnet Auto-Confirm Policy
+## Install
 
-By default, write-capable skills stop before Pharos mainnet broadcasts unless the exact confirmation string is present. Users can explicitly create a local, time-limited policy that lets allowed scripts omit repeated `CONFIRM_MAINNET_*` strings while still requiring `--broadcast` and enforcing signer/amount limits.
+Clone the repo:
 
-Create a cautious one-hour policy for small bridge and swap tests:
+```bash
+git clone https://github.com/luminchik/pharos-skills-byLumin.git
+cd pharos-skills-byLumin
+```
+
+Install for your agent runtime.
+
+Windows PowerShell:
+
+```powershell
+.\scripts\install-skills.ps1 -Target codex
+.\scripts\install-skills.ps1 -Target claude
+.\scripts\install-skills.ps1 -Target openclaw
+.\scripts\install-skills.ps1 -Target all
+```
+
+macOS/Linux:
+
+```bash
+./scripts/install-skills.sh codex
+./scripts/install-skills.sh claude
+./scripts/install-skills.sh openclaw
+./scripts/install-skills.sh all
+```
+
+Then restart the agent or refresh its skill list.
+
+## Private Key
+
+Only write actions need a private key: swaps, bridges, transfers, deployments,
+or mints. Read-only reports work without one.
+
+Skills auto-discover a key from:
+
+1. `--private-key-file <path>`
+2. `PRIVATE_KEY`
+3. `PHAROS_PRIVATE_KEY_FILE`
+4. `~/.codex/secrets/pharos_private_key.txt`
+5. `~/.pharos/private_key`
+
+Cross-agent setup:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.pharos" | Out-Null
+Set-Content -NoNewline -Path "$env:USERPROFILE\.pharos\private_key" -Value "0xYOUR_PRIVATE_KEY"
+```
+
+```bash
+mkdir -p ~/.pharos
+printf "0xYOUR_PRIVATE_KEY" > ~/.pharos/private_key
+chmod 600 ~/.pharos/private_key
+```
+
+The scripts never print private keys.
+
+## Example Prompts
+
+Use normal language. The agent should pick the right skill.
+
+```text
+Check my Pharos mainnet wallet portfolio.
+Summarize this wallet's Pharos transaction history.
+Show my Faroswap and AquaFlux DeFi positions.
+Quote a Faroswap swap from PROS to USDC.
+Buy 5 USDC with PROS through Faroswap.
+Prepare a bridge plan from Pharos mainnet to Base for 0.01 USDC.
+Create an ERC721 NFT collection on Pharos mainnet with this image.
+Plan a batch transfer to these wallets.
+Debug this Pharos transaction hash.
+```
+
+## Mainnet Safety
+
+Mainnet writes require `--broadcast` and local safety checks.
+
+By default, skills stop before risky broadcasts unless the user confirms.
+For repeated tests, create a local policy:
 
 ```powershell
 node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --actions bridge,swap --signer 0xYourWallet --expires-minutes 60 --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
@@ -57,123 +135,27 @@ node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --show
 node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --disable
 ```
 
-The default path is `~/.codex/secrets/pharos_policy.json`; it is local and should not be committed.
-
-Permanent local policy is also supported when the user explicitly accepts persistent mainnet access. It still enforces signer/action/amount/route limits and scripts still require `--broadcast`:
-
-```powershell
-node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --permanent --actions bridge,swap --signer 0xYourWallet --max-bridge-usdc 0.10 --bridge-to 8453 --max-swap-pros 0.01 --max-swap-usdc 1
-```
-
-Power-user mode is a local opt-in for permanent mainnet access with unlimited token amounts. It is never the repository default, but an agent can configure it after the user explicitly asks:
+Power-user mode is available, but it is local opt-in only:
 
 ```powershell
 node .\skills\pharos-agent-toolkit\scripts\pharos-policy.mjs --enable --power-user --signer 0xYourWallet
 ```
 
-Even in power-user mode, write scripts still require `--broadcast`, signer checks, and valid saved plans.
+## Update
 
-## Private Key Setup
-
-Write-capable scripts auto-discover keys in this order:
-
-1. `--private-key-file <path>` when the script supports it
-2. `PRIVATE_KEY`
-3. `PHAROS_PRIVATE_KEY_FILE`
-4. `~/.codex/secrets/pharos_private_key.txt`
-5. `~/.pharos/private_key`
-
-If no key is found, the scripts stop before broadcast and print setup steps. They never print the key.
-
-Cross-agent local setup, recommended for Codex, Claude Code, and OpenClaw:
-
-Windows PowerShell:
+Skills are local files. Agent runtimes do not auto-pull GitHub updates.
 
 ```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.pharos" | Out-Null
-Set-Content -NoNewline -Path "$env:USERPROFILE\.pharos\private_key" -Value "0xYOUR_PRIVATE_KEY"
-```
-
-macOS/Linux:
-
-```bash
-mkdir -p ~/.pharos
-printf "0xYOUR_PRIVATE_KEY" > ~/.pharos/private_key
-chmod 600 ~/.pharos/private_key
-```
-
-Codex-specific local setup is also supported:
-
-```powershell
-New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\secrets" | Out-Null
-Set-Content -NoNewline -Path "$env:USERPROFILE\.codex\secrets\pharos_private_key.txt" -Value "0xYOUR_PRIVATE_KEY"
-```
-
-macOS/Linux:
-
-```bash
-mkdir -p ~/.codex/secrets
-printf "0xYOUR_PRIVATE_KEY" > ~/.codex/secrets/pharos_private_key.txt
-chmod 600 ~/.codex/secrets/pharos_private_key.txt
-```
-
-## Install
-
-Windows PowerShell:
-
-```powershell
-.\scripts\install-skills.ps1 -Target codex
-.\scripts\install-skills.ps1 -Target claude
-.\scripts\install-skills.ps1 -Target openclaw
-```
-
-Unix-like shells:
-
-```bash
-./scripts/install-skills.sh codex
-./scripts/install-skills.sh claude
-./scripts/install-skills.sh openclaw
-```
-
-Install to all supported local agent skill folders:
-
-```powershell
+git pull
 .\scripts\install-skills.ps1 -Target all
 ```
 
 ```bash
+git pull
 ./scripts/install-skills.sh all
 ```
 
-Backward-compatible Codex shortcuts are still available:
-
-```powershell
-.\scripts\install-codex.ps1
-```
-
-```bash
-./scripts/install-codex.sh
-```
-
-Manual install:
-
-```text
-copy skills/<skill-name> to:
-  Codex:       ~/.codex/skills/<skill-name>
-  Claude Code: ~/.claude/skills/<skill-name>
-  OpenClaw:    ~/.openclaw/skills/<skill-name>
-```
-
-## Update Installed Skills
-
-Skills are local files; agent runtimes do not auto-pull this GitHub repository. To update after the repo changes:
-
-```powershell
-git pull
-.\scripts\install-skills.ps1 -Target codex
-```
-
-Replace `codex` with `claude`, `openclaw`, or `all` for other runtimes. Then restart the agent or refresh its skill list.
+Restart the agent or refresh skills after updating.
 
 ## Validate
 
@@ -181,39 +163,34 @@ Replace `codex` with `claude`, `openclaw`, or `all` for other runtimes. Then res
 .\scripts\validate-skills.ps1
 ```
 
-The validator checks that every skill has a matching folder/name, a `SKILL.md`, frontmatter metadata, and valid JavaScript syntax for bundled `.mjs` scripts when Node.js is available.
-It also runs help smoke tests for supported scripts, checks shared asset drift, and scans for the local private key value if one is configured.
+The validator checks skill metadata, JavaScript syntax, help smoke tests, shared
+asset drift, and accidental private key leaks.
 
-Shared Pharos network/token assets live under `shared/assets/` and are copied into each portable skill folder. If validation reports asset drift, run:
+If shared assets drift:
 
 ```powershell
 .\scripts\sync-shared-assets.ps1
 ```
 
-## Safety Model
+## Safety Rules
 
-- Never store or print private keys.
-- Default to Pharos Atlantic testnet when a write workflow is ambiguous.
+- Never commit or print private keys.
+- Prefer read-only checks before write actions.
+- Verify Pharos chain IDs before broadcasts.
+- Use exact approvals for ERC20 writes when possible.
+- Keep saved plans for large or sensitive transactions.
 - Treat Pharos mainnet as production.
-- Verify RPC chain IDs before writes.
-- Run dry-run planning before batch transfers or deployments.
-- Use public RPC/explorer endpoints; no private node dependency is required.
-- Stop before broadcast unless the exact confirmation string is present.
 
 ## Contest Fit
 
-These skills are built for the Pharos Agent Center skill builder campaign: each skill helps an AI agent perform a concrete onchain or developer-related action while staying portable across agent hosts.
-
-The repository covers several suggested categories:
+This repo covers multiple Pharos Agent Center campaign categories:
 
 - Wallet portfolio summary
-- NFT ownership checker and NFT creator
-- Batch transfer skill
-- Cross-chain bridge skill
-- Smart contract interaction and swap helper
+- Transaction history summary
 - DeFi position checker
-- Ecosystem asset tracker
-- Testnet/mainnet activity helper
-- Onchain analytics skill
+- Pharos ecosystem asset tracker
+- NFT creator
+- Batch transfer skill
+- Bridge skill
+- Swap helper
 - Developer debugging skill
-- Multi-wallet asset aggregation
