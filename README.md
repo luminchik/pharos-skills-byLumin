@@ -85,7 +85,24 @@ Write-capable scripts auto-discover keys in this order:
 
 If no key is found, the scripts stop before broadcast and print setup steps. They never print the key.
 
+Cross-agent local setup, recommended for Codex, Claude Code, and OpenClaw:
+
 Windows PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.pharos" | Out-Null
+Set-Content -NoNewline -Path "$env:USERPROFILE\.pharos\private_key" -Value "0xYOUR_PRIVATE_KEY"
+```
+
+macOS/Linux:
+
+```bash
+mkdir -p ~/.pharos
+printf "0xYOUR_PRIVATE_KEY" > ~/.pharos/private_key
+chmod 600 ~/.pharos/private_key
+```
+
+Codex-specific local setup is also supported:
 
 ```powershell
 New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\secrets" | Out-Null
@@ -102,13 +119,37 @@ chmod 600 ~/.codex/secrets/pharos_private_key.txt
 
 ## Install
 
-Codex:
+Windows PowerShell:
+
+```powershell
+.\scripts\install-skills.ps1 -Target codex
+.\scripts\install-skills.ps1 -Target claude
+.\scripts\install-skills.ps1 -Target openclaw
+```
+
+Unix-like shells:
+
+```bash
+./scripts/install-skills.sh codex
+./scripts/install-skills.sh claude
+./scripts/install-skills.sh openclaw
+```
+
+Install to all supported local agent skill folders:
+
+```powershell
+.\scripts\install-skills.ps1 -Target all
+```
+
+```bash
+./scripts/install-skills.sh all
+```
+
+Backward-compatible Codex shortcuts are still available:
 
 ```powershell
 .\scripts\install-codex.ps1
 ```
-
-Unix-like runtimes:
 
 ```bash
 ./scripts/install-codex.sh
@@ -129,10 +170,10 @@ Skills are local files; agent runtimes do not auto-pull this GitHub repository. 
 
 ```powershell
 git pull
-.\scripts\install-codex.ps1
+.\scripts\install-skills.ps1 -Target codex
 ```
 
-Then restart Codex or run `/skills` to refresh the skill list.
+Replace `codex` with `claude`, `openclaw`, or `all` for other runtimes. Then restart the agent or refresh its skill list.
 
 ## Validate
 
