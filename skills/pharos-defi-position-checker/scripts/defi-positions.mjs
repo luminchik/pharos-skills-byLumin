@@ -44,10 +44,11 @@ function protocolsFor(networkName, extra) {
   return [...builtInList, ...extraList];
 }
 
-function addIfVisible(rows, row, includeZero) {
+function addIfVisible(rows, row, includeZero, jsonRows = []) {
   if (includeZero || row.Raw === undefined || BigInt(row.Raw) !== 0n) {
     const { Raw, ...visible } = row;
     rows.push(visible);
+    jsonRows.push(row);
   }
 }
 
@@ -65,12 +66,15 @@ const networks = selectNetworks(args.network || undefined);
 const tokens = loadTokens();
 const extraProtocols = loadExtraProtocols(args["protocol-file"]);
 const rows = [];
+const jsonRows = [];
 let hiddenZero = 0;
 
-console.log("# Pharos DeFi Position Check");
-console.log("");
-console.log(`Wallet: ${wallet}`);
-console.log("");
+if (!args.json) {
+  console.log("# Pharos DeFi Position Check");
+  console.log("");
+  console.log(`Wallet: ${wallet}`);
+  console.log("");
+}
 
 for (const network of networks) {
   const native = parseCastUint(runCast(["balance", wallet, "--rpc-url", network.rpcUrl]));
@@ -83,7 +87,7 @@ for (const network of networks) {
     Raw: native.toString(),
     Contract: "-",
     Explorer: explorerAddress(network, wallet)
-  }, includeZero);
+  }, includeZero, jsonRows);
   if (native === 0n && !includeZero) hiddenZero += 1;
 
   for (const token of tokens[network.name] || []) {
@@ -105,7 +109,7 @@ for (const network of networks) {
       Raw: raw.toString(),
       Contract: token.address,
       Explorer: explorerAddress(network, token.address)
-    }, includeZero);
+    }, includeZero, jsonRows);
     if (raw === 0n && !includeZero) hiddenZero += 1;
   }
 
@@ -128,7 +132,7 @@ for (const network of networks) {
         Raw: raw.toString(),
         Contract: protocol.contract,
         Explorer: explorerAddress(network, protocol.contract)
-      }, includeZero);
+      }, includeZero, jsonRows);
       if (raw === 0n && !includeZero) hiddenZero += 1;
     } else if (protocol.type === "staking") {
       const staked = parseCastUint(runCast([
@@ -148,7 +152,7 @@ for (const network of networks) {
         Raw: staked.toString(),
         Contract: protocol.contract,
         Explorer: explorerAddress(network, protocol.contract)
-      }, includeZero);
+      }, includeZero, jsonRows);
       if (protocol.rewardFunction) {
         const reward = parseCastUint(runCast([
           "call",
@@ -167,11 +171,32 @@ for (const network of networks) {
           Raw: reward.toString(),
           Contract: protocol.contract,
           Explorer: explorerAddress(network, protocol.contract)
-        }, includeZero);
+        }, includeZero, jsonRows);
         if (reward === 0n && !includeZero) hiddenZero += 1;
       }
     }
   }
+}
+
+if (args.json) {
+  console.log(JSON.stringify({
+    ok: true,
+    wallet,
+    networks: networks.map((network) => network.name),
+    includeZero,
+    hiddenZero,
+    positions: jsonRows.map((row) => ({
+      network: row.Network,
+      source: row.Source,
+      position: row.Position,
+      category: row.Category,
+      balance: row.Balance,
+      raw: row.Raw,
+      contract: row.Contract,
+      explorer: row.Explorer
+    }))
+  }, null, 2));
+  process.exit(0);
 }
 
 printTable(rows);

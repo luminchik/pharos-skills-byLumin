@@ -35,6 +35,7 @@ node .\scripts\defi-positions.mjs 0x13e272ed4a94105b1fab86ca878f6d049355c978 --n
 
 - Report network, source, position symbol, category, balance, contract, and explorer link.
 - Hide zero positions by default and mention how many were hidden.
+- Use `--json` when another agent/script needs machine-readable position data.
 - Do not invent protocol addresses. Use only `assets/protocols.json` or user-provided protocol files.
 - If a protocol call fails, stop and explain which definition likely needs correction.
 

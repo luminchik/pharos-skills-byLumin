@@ -263,31 +263,40 @@ try {
         estimateGas: args["estimate-gas"] ?? true
       });
 
-  console.log("# Faroswap Safe Swap");
-  console.log("");
-  printTable(planRows(plan));
-  if (plan.targetOut) {
-    const minOut = minOutBase(plan);
-    const expOut = expectedOutBase(plan);
+  if (args.json && !args.broadcast) {
+    console.log(JSON.stringify({
+      ok: true,
+      broadcast: false,
+      savedPlan: args["save-plan"] ? writePlan(args["save-plan"], plan) : "",
+      plan
+    }, null, 2));
+  } else {
+    console.log("# Faroswap Safe Swap");
     console.log("");
-    printTable([
-      { Field: "Target out", Value: `${plan.targetOut.amount} ${toToken.symbol}` },
-      { Field: "Expected out", Value: expOut === null ? "-" : `${amountFromBase(expOut, toToken.decimals)} ${toToken.symbol}` },
-      { Field: "Minimum out", Value: minOut === null ? "-" : `${amountFromBase(minOut, toToken.decimals)} ${toToken.symbol}` },
-      { Field: "Quotes used", Value: String(plan.targetOut.quotesUsed) }
-    ]);
-  }
+    printTable(planRows(plan));
+    if (plan.targetOut) {
+      const minOut = minOutBase(plan);
+      const expOut = expectedOutBase(plan);
+      console.log("");
+      printTable([
+        { Field: "Target out", Value: `${plan.targetOut.amount} ${toToken.symbol}` },
+        { Field: "Expected out", Value: expOut === null ? "-" : `${amountFromBase(expOut, toToken.decimals)} ${toToken.symbol}` },
+        { Field: "Minimum out", Value: minOut === null ? "-" : `${amountFromBase(minOut, toToken.decimals)} ${toToken.symbol}` },
+        { Field: "Quotes used", Value: String(plan.targetOut.quotesUsed) }
+      ]);
+    }
 
-  if (args["save-plan"]) {
-    console.log(`Saved plan: ${writePlan(args["save-plan"], plan)}`);
-  } else {
-    console.log("Plan: ephemeral (not saved). Use --save-plan <file> to keep it.");
-  }
+    if (args["save-plan"]) {
+      console.log(`Saved plan: ${writePlan(args["save-plan"], plan)}`);
+    } else {
+      console.log("Plan: ephemeral (not saved). Use --save-plan <file> to keep it.");
+    }
 
-  if (!args.broadcast) {
-    console.log("Dry run only. Add --broadcast to execute with a matching policy or CONFIRM_MAINNET_SWAP.");
-  } else {
-    executePlan(args, plan);
+    if (!args.broadcast) {
+      console.log("Dry run only. Add --broadcast to execute with a matching policy or CONFIRM_MAINNET_SWAP.");
+    } else {
+      executePlan(args, plan);
+    }
   }
 } catch (error) {
   console.error(`Error: ${error.message}`);

@@ -182,6 +182,13 @@ Replace `codex` with `claude`, `openclaw`, or `all` for other runtimes. Then res
 ```
 
 The validator checks that every skill has a matching folder/name, a `SKILL.md`, frontmatter metadata, and valid JavaScript syntax for bundled `.mjs` scripts when Node.js is available.
+It also runs help smoke tests for supported scripts, checks shared asset drift, and scans for the local private key value if one is configured.
+
+Shared Pharos network/token assets live under `shared/assets/` and are copied into each portable skill folder. If validation reports asset drift, run:
+
+```powershell
+.\scripts\sync-shared-assets.ps1
+```
 
 ## Safety Model
 

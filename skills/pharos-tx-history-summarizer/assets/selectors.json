@@ -10,6 +10,10 @@
     "0xdd62ed3e": "allowance(address,address)",
     "0x6352211e": "ownerOf(uint256)",
     "0xc87b56dd": "tokenURI(uint256)",
-    "0xf242432a": "safeTransferFrom(address,address,uint256,uint256,bytes)"
+    "0xf242432a": "safeTransferFrom(address,address,uint256,uint256,bytes)",
+    "0xff84aafa": "Faroswap mixSwap(...)",
+    "0xd0e30db0": "wrap native deposit()",
+    "0x2e1a7d4d": "unwrap native withdraw(uint256)",
+    "0x780c82ab": "bridge route execution"
   }
 }

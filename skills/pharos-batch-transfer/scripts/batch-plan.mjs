@@ -54,6 +54,21 @@ try {
     fs.writeFileSync(path.resolve(args.output), `${JSON.stringify(planJson(plan), null, 2)}\n`, "utf8");
   }
 
+  const commandPreviews = plan.chunks.map((chunk, index) => ({
+    chunk: index + 1,
+    command: commandPreview(plan, chunk)
+  }));
+
+  if (args.json) {
+    console.log(JSON.stringify({
+      ok: true,
+      output: args.output ? path.resolve(args.output) : "",
+      plan: planJson(plan),
+      commandPreviews
+    }, null, 2));
+    process.exit(0);
+  }
+
   const assetLabel = plan.asset === "native"
     ? plan.network.nativeToken
     : `${plan.token.symbol} (${plan.token.address})`;
@@ -87,7 +102,7 @@ try {
   for (let i = 0; i < Math.min(plan.chunks.length, 3); i += 1) {
     console.log(`Chunk ${i + 1}:`);
     console.log("```bash");
-    console.log(commandPreview(plan, plan.chunks[i]));
+    console.log(commandPreviews[i].command);
     console.log("```");
   }
   if (plan.chunks.length > 3) console.log(`... ${plan.chunks.length - 3} more chunks hidden`);

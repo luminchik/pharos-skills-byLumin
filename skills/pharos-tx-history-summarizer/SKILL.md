@@ -37,6 +37,7 @@ node .\scripts\tx-history.mjs 0x13e272ed4a94105b1fab86ca878f6d049355c978 --netwo
 - Show fetched transaction count, success/failed counts, inbound/outbound counts, native sent/received totals, and gas fees.
 - Show top activity types and counterparties.
 - Show latest transaction table with explorer links.
+- Use `--json` when another agent/script needs machine-readable history data.
 - If a selector is unknown, label it as `<selector> call` rather than guessing.
 
 ## Limitations

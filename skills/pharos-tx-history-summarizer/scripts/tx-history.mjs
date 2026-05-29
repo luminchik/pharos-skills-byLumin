@@ -80,16 +80,21 @@ const pages = Math.max(1, Math.min(20, Number(args.pages || 2)));
 const latestCount = Math.max(1, Math.min(50, Number(args.latest || 10)));
 const selectors = loadSelectors();
 const networks = selectNetworks(args.network || undefined);
+const jsonMode = Boolean(args.json);
+const reports = [];
 
-console.log("# Pharos Transaction History Summary");
-console.log("");
-console.log(`Address: ${address}`);
-console.log("");
+if (!jsonMode) {
+  console.log("# Pharos Transaction History Summary");
+  console.log("");
+  console.log(`Address: ${address}`);
+  console.log("");
+}
 
 for (const network of networks) {
   const transactions = [];
   const seen = new Set();
   let explorerTotal = "unknown";
+  let apiError = "";
   for (let page = 1; page <= pages; page += 1) {
     const url = `${network.historyApiUrl}/address/${address}/transactions?page=${page}`;
     try {
@@ -106,12 +111,19 @@ for (const network of networks) {
       }
       if (data.length === 0) break;
     } catch (error) {
+      apiError = error.message;
+      break;
+    }
+  }
+  if (apiError) {
+    reports.push({ network: network.name, ok: false, error: apiError });
+    if (!jsonMode) {
       console.log(`## ${network.name}`);
       console.log("");
-      console.log(`History API error: ${error.message}`);
+      console.log(`History API error: ${apiError}`);
       console.log("");
-      continue;
     }
+    continue;
   }
 
   const total = transactions.length;
@@ -127,20 +139,6 @@ for (const network of networks) {
     .filter((tx) => direction(tx, address) === "in")
     .reduce((sum, tx) => sum + asNumber(tx.value), 0);
 
-  console.log(`## ${network.name}`);
-  console.log("");
-  printTable([
-    { Metric: "Explorer total", Value: explorerTotal },
-    { Metric: "Fetched transactions", Value: String(total) },
-    { Metric: "Success / failed", Value: `${success} / ${failed}` },
-    { Metric: "Inbound / outbound", Value: `${inbound} / ${outbound}` },
-    { Metric: `Native sent (${network.nativeToken})`, Value: sentValue.toFixed(6) },
-    { Metric: `Native received (${network.nativeToken})`, Value: receivedValue.toFixed(6) },
-    { Metric: `Gas fees (${network.nativeToken})`, Value: totalFees.toFixed(8) },
-    { Metric: "Explorer", Value: explorerAddress(network, address) }
-  ]);
-  console.log("");
-
   const classes = new Map();
   const counterparties = new Map();
   for (const tx of transactions) {
@@ -155,17 +153,11 @@ for (const network of networks) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([Type, Count]) => ({ Type, Count }));
-  console.log("### Activity Types");
-  printTable(classRows);
-  console.log("");
 
   const counterpartyRows = [...counterparties.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
     .map(([Address, Count]) => ({ Address: shortAddress(Address), Count }));
-  console.log("### Top Counterparties");
-  printTable(counterpartyRows);
-  console.log("");
 
   const latestRows = transactions.slice(0, latestCount).map((tx) => ({
     Time: tx.block_timestamp || "-",
@@ -178,7 +170,59 @@ for (const network of networks) {
     Link: explorerTx(network, tx.hash)
   }));
 
+  const report = {
+    network: network.name,
+    ok: true,
+    explorer: explorerAddress(network, address),
+    explorerTotal,
+    fetchedTransactions: total,
+    success,
+    failed,
+    inbound,
+    outbound,
+    nativeSent: sentValue.toFixed(6),
+    nativeReceived: receivedValue.toFixed(6),
+    gasFees: totalFees.toFixed(8),
+    activityTypes: classRows,
+    topCounterparties: counterpartyRows,
+    latestTransactions: latestRows
+  };
+  reports.push(report);
+  if (jsonMode) continue;
+
+  console.log(`## ${network.name}`);
+  console.log("");
+  printTable([
+    { Metric: "Explorer total", Value: explorerTotal },
+    { Metric: "Fetched transactions", Value: String(total) },
+    { Metric: "Success / failed", Value: `${success} / ${failed}` },
+    { Metric: "Inbound / outbound", Value: `${inbound} / ${outbound}` },
+    { Metric: `Native sent (${network.nativeToken})`, Value: sentValue.toFixed(6) },
+    { Metric: `Native received (${network.nativeToken})`, Value: receivedValue.toFixed(6) },
+    { Metric: `Gas fees (${network.nativeToken})`, Value: totalFees.toFixed(8) },
+    { Metric: "Explorer", Value: explorerAddress(network, address) }
+  ]);
+  console.log("");
+
+  console.log("### Activity Types");
+  printTable(classRows);
+  console.log("");
+
+  console.log("### Top Counterparties");
+  printTable(counterpartyRows);
+  console.log("");
+
   console.log("### Latest Transactions");
   printTable(latestRows);
   console.log("");
+}
+
+if (jsonMode) {
+  console.log(JSON.stringify({
+    ok: reports.every((report) => report.ok !== false),
+    address,
+    pages,
+    latest: latestCount,
+    reports
+  }, null, 2));
 }

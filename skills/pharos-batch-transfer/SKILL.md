@@ -60,6 +60,7 @@ node scripts/batch-distributor-deploy.mjs --network mainnet --broadcast --confir
 
 - Show network, chain id, asset, transfer mode, recipient count, total amount, chunk count, signer balance checks, and command previews.
 - Include explorer links for broadcasts.
+- Use `--json` when another agent/script needs a machine-readable batch plan and command previews.
 - If a transfer cannot be safely executed, stop before sending and show the exact failed preflight check.
 - For large lists, print a compact summary and write detailed progress/report files.
 

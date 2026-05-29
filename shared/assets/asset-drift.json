@@ -1,0 +1,20 @@
+{
+  "description": "Canonical shared assets used to detect drift while each skill remains self-contained.",
+  "groups": [
+    {
+      "canonical": "shared/assets/core-networks.json",
+      "copies": [
+        "skills/pharos-agent-toolkit/assets/networks.json",
+        "skills/pharos-batch-transfer/assets/networks.json",
+        "skills/pharos-nft-deployer/assets/networks.json"
+      ]
+    },
+    {
+      "canonical": "shared/assets/core-tokens.json",
+      "copies": [
+        "skills/pharos-agent-toolkit/assets/tokens.json",
+        "skills/pharos-batch-transfer/assets/tokens.json"
+      ]
+    }
+  ]
+}

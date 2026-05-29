@@ -47,8 +47,66 @@ if ($node) {
             Write-Host "OK js: $($_.FullName.Substring($repoRoot.Path.Length + 1))"
         }
     }
+
+    Get-ChildItem -Path $skillsRoot -Recurse -Filter "*.mjs" |
+        Where-Object { $_.FullName -notmatch "\\lib\\" } |
+        Sort-Object FullName |
+        ForEach-Object {
+            $content = Get-Content -Raw -Path $_.FullName
+            if ($content -match "args\.help|args\.h|--help") {
+                & node $_.FullName --help | Out-Null
+                if ($LASTEXITCODE -ne 0) {
+                    $errors.Add("help smoke failed: $($_.FullName)")
+                } else {
+                    Write-Host "OK help: $($_.FullName.Substring($repoRoot.Path.Length + 1))"
+                }
+            }
+        }
 } else {
     Write-Warning "Node.js not found; skipped JavaScript syntax validation"
+}
+
+$assetManifest = Join-Path $repoRoot "shared\assets\asset-drift.json"
+if (Test-Path $assetManifest) {
+    $manifest = Get-Content -Raw -Path $assetManifest | ConvertFrom-Json
+    foreach ($group in $manifest.groups) {
+        $canonical = Join-Path $repoRoot $group.canonical
+        if (-not (Test-Path $canonical)) {
+            $errors.Add("canonical asset missing: $($group.canonical)")
+            continue
+        }
+        $canonicalHash = (Get-FileHash -Algorithm SHA256 -Path $canonical).Hash
+        foreach ($copy in $group.copies) {
+            $copyPath = Join-Path $repoRoot $copy
+            if (-not (Test-Path $copyPath)) {
+                $errors.Add("asset copy missing: $copy")
+                continue
+            }
+            $copyHash = (Get-FileHash -Algorithm SHA256 -Path $copyPath).Hash
+            if ($copyHash -ne $canonicalHash) {
+                $errors.Add("asset drift: $copy differs from $($group.canonical). Run scripts\sync-shared-assets.ps1")
+            } else {
+                Write-Host "OK asset: $copy"
+            }
+        }
+    }
+}
+
+$secretFile = Join-Path $HOME ".codex\secrets\pharos_private_key.txt"
+if (Test-Path $secretFile) {
+    $secret = (Get-Content -Raw -Path $secretFile).Trim()
+    if ($secret) {
+        $scanFiles = Get-ChildItem -Path $repoRoot -Recurse -File |
+            Where-Object { $_.FullName -notmatch "\\.git\\|\\out\\" }
+        $hits = $scanFiles | Select-String -SimpleMatch $secret -ErrorAction SilentlyContinue
+        if ($hits) {
+            foreach ($hit in $hits) {
+                $errors.Add("secret hit: $($hit.Path):$($hit.LineNumber)")
+            }
+        } else {
+            Write-Host "OK secret scan: local private key not found in repo files"
+        }
+    }
 }
 
 if ($errors.Count -gt 0) {

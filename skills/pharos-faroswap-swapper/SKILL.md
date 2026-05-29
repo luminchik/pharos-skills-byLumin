@@ -14,7 +14,10 @@ Required binaries: Node.js. Required for execution and transaction inspection: F
 
 - Faroswap is Pharos mainnet only (`chainId 1672`).
 - Use Faroswap/DODO quote output for `to`, `data`, `value`, `minReturnAmount`, and approval spender. Do not hand-build router calldata when the API is available.
-- Never broadcast directly from a chat answer. Save a plan first, then execute the saved plan.
+- Use risk-tier planning:
+  - Read-only quote/decode/doctor: no saved plan is required.
+  - Small swap with local policy or explicit confirmation: `faroswap-swap-safe.mjs` may use an ephemeral plan.
+  - Large amount, no policy, target-output tuning, or audit request: save a plan first, then execute the saved plan.
 - For normal user requests like "swap 0.001 PROS to USDC" or "buy 5 PROS with USDC", prefer `faroswap-swap-safe.mjs`; it can use an ephemeral plan and avoids ad-hoc quote-search code.
 - Mainnet swap execution requires `--broadcast --confirm CONFIRM_MAINNET_SWAP`.
 - A matching local policy may replace the confirmation string only when the user explicitly configured it; scripts still require `--broadcast`.
@@ -87,6 +90,7 @@ node scripts/faroswap-decode-tx.mjs --tx 0x87a74a2dcc0328fb4ec471c2b2f5361c1ff11
 - Show network, from token, to token, input amount, estimated output, minimum return, slippage, route source, target, value, approval spender, gas limit, and plan expiry.
 - For ERC20 swaps, show whether approval is required and the exact approval amount.
 - For execution, show approval tx hash when approval was sent and swap tx hash after broadcast.
+- Use `--json` when another agent/script needs machine-readable output.
 - For target-output requests, say that Faroswap is exact-input under the hood; the safe swap script targets `minReturnAmount >= requested output`, so the user may receive slightly more.
 - For decode, show function selector, decoded action, transfers for known tokens, and explorer links.
 
