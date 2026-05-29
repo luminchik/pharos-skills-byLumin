@@ -12,9 +12,13 @@ By default the script checks:
 
 - Native token balance.
 - Known ERC20 token balances from `assets/tokens.json`.
-- Protocol definitions from `assets/protocols.json`.
+- Protocol definitions from `assets/protocols.json`, including Faroswap V3 LP NFTs and AquaFlux market tokens where verified.
 
 Zero positions are hidden unless `--include-zero` is supplied.
+
+For Faroswap V3 LP NFT holders, the report decodes each visible tokenId into pair, fee tier, ticks, liquidity, and owed token balances.
+
+For AquaFlux, the built-in registry reports P-token, underlying RWA token, AQ-token, S-token, LP token, and v4 position NFT balances.
 
 ## Both Networks
 
@@ -33,6 +37,8 @@ node scripts/defi-positions.mjs <wallet> --network mainnet --protocol-file proto
 Summarize:
 
 - Non-zero positions.
+- Faroswap LP NFT tokenIds and decoded details when present.
+- AquaFlux market exposure by token class when present.
 - Stablecoin exposure.
 - Wrapped/native exposure.
 - Any hidden zero positions.

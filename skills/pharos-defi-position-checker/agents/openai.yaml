@@ -1,8 +1,7 @@
 interface:
   display_name: "Pharos DeFi Position Checker"
-  short_description: "Summarize Pharos token and DeFi positions"
+  short_description: "Summarize Pharos token, Faroswap, and AquaFlux positions"
   brand_color: "#1D4ED8"
   default_prompt: "Use $pharos-defi-position-checker to summarize a wallet's Pharos DeFi positions."
 policy:
   allow_implicit_invocation: true
-

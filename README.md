@@ -26,7 +26,7 @@ This repository does not vendor the official `pharos-skill-engine`; it uses that
 | `pharos-batch-transfer` | Native/ERC20 batch transfers, airdrops, distributor deployment, `batchTransferUniform(address[],uint256)` workflows | Only for broadcast |
 | `pharos-bridge-router` | Jumper/LI.FI bridge quotes, saved bridge plans, dry-run execution, Jumper status, Transporter/CCIP status, bridge app links | Only for broadcast |
 | `pharos-faroswap-swapper` | Faroswap/DODO quotes, saved swap plans, PROS/WPROS/USDC swaps, wrapping/unwrapping, Faroswap tx decoding | Only for broadcast |
-| `pharos-defi-position-checker` | Native/token/LP/staking/vault/RealFi-style position reports using registry files | No |
+| `pharos-defi-position-checker` | Native/token/LP/staking/vault/RealFi reports, Faroswap V3 LP NFT decode, and AquaFlux P/AQ/S/RWA/LP positions | No |
 | `pharos-tx-history-summarizer` | Wallet transaction history, gas, success/failure, counterparties, latest activity via public explorer APIs | No |
 
 ## Requirements
@@ -212,6 +212,7 @@ The repository covers several suggested categories:
 - Cross-chain bridge skill
 - Smart contract interaction and swap helper
 - DeFi position checker
+- Ecosystem asset tracker
 - Testnet/mainnet activity helper
 - Onchain analytics skill
 - Developer debugging skill

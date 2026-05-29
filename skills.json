@@ -44,7 +44,7 @@
       "path": "skills/pharos-defi-position-checker",
       "category": "defi",
       "write_capable": false,
-      "summary": "Registry-driven native, token, LP, staking, vault, and RealFi-style position reports."
+      "summary": "Registry-driven native, token, Faroswap V3 LP NFT, AquaFlux P/AQ/S/RWA/LP, staking, vault, and RealFi-style position reports."
     },
     {
       "name": "pharos-tx-history-summarizer",

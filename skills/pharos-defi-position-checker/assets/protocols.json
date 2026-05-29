@@ -1,5 +1,133 @@
 {
   "description": "Registry for optional Pharos DeFi position definitions. Keep this conservative; add protocol contracts only after verifying addresses and read methods.",
-  "atlantic-testnet": [],
-  "mainnet": []
+  "atlantic-testnet": [
+    {
+      "name": "AquaFlux pALPHA3 Market",
+      "type": "erc20-balance",
+      "contract": "0x02CBdCace25C4fA2feB86f3B47d2fe96be7b727e",
+      "symbol": "P-pALPHA3",
+      "decimals": 6,
+      "category": "AquaFlux principal token",
+      "details": "AquaFlux Atlantic P token"
+    },
+    {
+      "name": "AquaFlux pALPHA3 Market",
+      "type": "erc20-balance",
+      "contract": "0xe685138B9d377f5271f9AbF809C1478b4251FCFa",
+      "symbol": "pALPHA3",
+      "decimals": 6,
+      "category": "AquaFlux RWA token",
+      "details": "AquaFlux Atlantic underlying RWA token"
+    },
+    {
+      "name": "AquaFlux pALPHA3 Market",
+      "type": "erc20-balance",
+      "contract": "0xC2a3C082c5c000Be8D62270D7b3b3FD42D56EaEA",
+      "symbol": "AQ-pALPHA3",
+      "decimals": 6,
+      "category": "AquaFlux wrapped asset",
+      "details": "AquaFlux Atlantic AQ token"
+    },
+    {
+      "name": "AquaFlux pALPHA3 Market",
+      "type": "erc20-balance",
+      "contract": "0xb58b2664C9d99DF157eB487B5324e802d6E7a8A5",
+      "symbol": "S-pALPHA3",
+      "decimals": 6,
+      "category": "AquaFlux shield token",
+      "details": "AquaFlux Atlantic S token"
+    },
+    {
+      "name": "AquaFlux pALPHA3 Market",
+      "type": "erc20-balance",
+      "contract": "0x1982FC557407f85837eECD9720fc816E8057C1FB",
+      "symbol": "aqLP",
+      "decimals": 18,
+      "category": "AquaFlux LP token",
+      "details": "AquaFlux LP P-pALPHA3/AQ-pALPHA3"
+    },
+    {
+      "name": "AquaFlux V4 Positions",
+      "type": "erc721-balance",
+      "contract": "0xF8Dd10e346b85FeF3bff1F229Ca1C1babdaB80B5",
+      "symbol": "AQUA-V4-NFT",
+      "category": "AquaFlux v4 liquidity NFT"
+    }
+  ],
+  "mainnet": [
+    {
+      "name": "Faroswap V3 Positions",
+      "type": "uniswap-v3-position-manager",
+      "contract": "0xc0479219f4FebA5A668cFF71BF96f4FFE124c3ab",
+      "symbol": "FAROSWAP-V3-LP",
+      "category": "Faroswap concentrated liquidity NFT",
+      "maxPositions": 25,
+      "tokenMetadata": [
+        {
+          "symbol": "WPROS",
+          "name": "Wrapped PROS",
+          "decimals": 18,
+          "address": "0x52c48d4213107b20bc583832b0d951fb9ca8f0b0"
+        },
+        {
+          "symbol": "USDC",
+          "name": "USDC",
+          "decimals": 6,
+          "address": "0xc879c018db60520f4355c26ed1a6d572cdac1815"
+        }
+      ]
+    },
+    {
+      "name": "AquaFlux pALPHA Market",
+      "type": "erc20-balance",
+      "contract": "0x34fD642Fa9fDc6Ce4013d4F3cde575C6dac904f9",
+      "symbol": "P-pALPHA",
+      "decimals": 6,
+      "category": "AquaFlux principal token",
+      "details": "AquaFlux mainnet P token"
+    },
+    {
+      "name": "AquaFlux pALPHA Market",
+      "type": "erc20-balance",
+      "contract": "0xE47E9bA4EA2320A6ed87246d02Fd5C38485Ed7d1",
+      "symbol": "pALPHA",
+      "decimals": 6,
+      "category": "AquaFlux RWA token",
+      "details": "AquaFlux mainnet underlying RWA token"
+    },
+    {
+      "name": "AquaFlux pALPHA Market",
+      "type": "erc20-balance",
+      "contract": "0xe150A72352a189dCe0D671C08F721B458104a2Af",
+      "symbol": "AQ-pALPHA",
+      "decimals": 6,
+      "category": "AquaFlux wrapped asset",
+      "details": "AquaFlux mainnet AQ token"
+    },
+    {
+      "name": "AquaFlux pALPHA Market",
+      "type": "erc20-balance",
+      "contract": "0x5ED00449A0D0B6A9F26FD6aF05832808A8b96bbE",
+      "symbol": "S-pALPHA",
+      "decimals": 6,
+      "category": "AquaFlux shield token",
+      "details": "AquaFlux mainnet S token"
+    },
+    {
+      "name": "AquaFlux pALPHA Market",
+      "type": "erc20-balance",
+      "contract": "0x99848bb3843A1cFBF2A03CFFEf146Ae6F216d343",
+      "symbol": "aqLP",
+      "decimals": 18,
+      "category": "AquaFlux LP token",
+      "details": "AquaFlux LP P-pALPHA/AQ-pALPHA"
+    },
+    {
+      "name": "AquaFlux V4 Positions",
+      "type": "erc721-balance",
+      "contract": "0xd73C27fe31e7E5f8D481E49967d12B8c16776Aa7",
+      "symbol": "AQUA-V4-NFT",
+      "category": "AquaFlux v4 liquidity NFT"
+    }
+  ]
 }
