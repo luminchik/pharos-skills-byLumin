@@ -1,6 +1,8 @@
 # Transporter / Chainlink CCIP
 
-Transporter is Chainlink CCIP-backed, so this skill tracks Transporter transfers through CCIP message IDs.
+Transporter is Chainlink CCIP-backed, so this skill can create narrow direct
+CCIP token-transfer tests and track Transporter transfers through CCIP message
+IDs.
 
 ## Status
 
@@ -23,6 +25,32 @@ Known Pharos CCIP values are stored in `assets/providers.json`:
 
 ## Execution Scope
 
-This skill does not synthesize direct CCIP `ccipSend` calldata by default. It tracks CCIP messages, validates Pharos router support, and provides Chainlink/Transporter status links. Add direct execution only after a dedicated ABI-level workflow is tested for the exact token/lane.
+`ccip-transfer.mjs` synthesizes direct CCIP Router `ccipSend` calldata for
+tested token/lane combinations. It quotes router fees, checks lane support, and
+blocks known unsupported token routes before broadcast.
+
+Live note: Pharos -> Base USDC has a supported CCIP chain lane and returns a
+router fee, but a 2026-05-30 mainnet preflight reverted with
+`ERC20: transfer to the zero address`, indicating no usable direct CCIP token
+pool for that USDC lane. Use `bridge-best-route.mjs` so the agent can select
+Interport/Jumper instead when direct CCIP is not executable.
+
+Dry run:
+
+```bash
+node scripts/ccip-transfer.mjs --from pharos --to base --token USDC --amount 0.001
+```
+
+Broadcast:
+
+```bash
+node scripts/ccip-transfer.mjs --from pharos --to base --token USDC --amount 0.001 --broadcast
+```
+
+For route selection, prefer:
+
+```bash
+node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.001
+```
 
 For native USDC movement, prefer the Circle CCTP workflow in `references/circle-cctp.md`. CCTP burns and mints native USDC and does not rely on a liquidity bridge route.

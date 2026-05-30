@@ -10,7 +10,7 @@ Portable bridge skill for Pharos mainnet. It supports two provider families:
 
 - Jumper/LI.FI for live route discovery, quote generation, transaction plans, and status tracking.
 - Circle CCTP V2 for native USDC burn/mint routes between Pharos and supported EVM domains. The built-in CCTP script is direct/self-mint mode; Interport-style CCTP uses the same Circle contracts but adds a relayer that submits the destination mint.
-- Transporter/Chainlink CCIP for CCIP message status tracking and Pharos router diagnostics.
+- Transporter/Chainlink CCIP for direct CCIP token-transfer tests, CCIP message status tracking, and Pharos router diagnostics.
 
 Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only quote/status tasks do not need a private key.
 
@@ -36,10 +36,14 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 | --- | --- | --- |
 | Quote Pharos to another chain with Jumper | `node scripts/bridge-quote.mjs --from pharos --to base --from-token PROS --to-token PROS --amount 0.01 --address <wallet>` | See `references/jumper-lifi.md` |
 | One-command safe bridge flow | `node scripts/bridge-safe.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast` | Ephemeral by default; add `--save-plan` for audit |
+| Compare live bridge providers and pick the cheapest route | `node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.05` | Compares Jumper/LI.FI, Interport CCTP relay, and CCIP |
+| Execute the currently cheapest bridge route | `node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast` | Uses the best executable provider after fresh quotes |
 | Quote plus safety checks in one run | `node scripts/bridge-plan-safe.mjs --from pharos --to base --from-token USDC --to-token USDC --amount 0.05 --address <wallet> --output plan.json` | Best default for clean-chat bridge prep |
 | Quote another chain back to Pharos | `node scripts/bridge-quote.mjs --from base --to pharos --from-token ETH --to-token PROS --amount 0.001 --address <wallet>` | See `references/jumper-lifi.md` |
 | Move native USDC with direct Circle CCTP | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --address <wallet>` | See `references/circle-cctp.md` |
 | Burn and self-mint direct CCTP USDC | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint` | Requires destination gas and confirmation/policy |
+| Move USDC with Interport relayed CCTP | `node scripts/interport-cctp-relay.mjs --from pharos --to base --amount 0.01 --broadcast` | Relayer submits destination `receiveMessage`; no user-side mint tx |
+| Move USDC with direct Chainlink CCIP | `node scripts/ccip-transfer.mjs --from pharos --to base --token USDC --amount 0.001 --broadcast` | Pays source-native CCIP fee and returns CCIP message link when parsed |
 | Discover currently supported Jumper routes | `node scripts/bridge-discover.mjs --from pharos --quotes usdc --address <wallet> --output routes.json` | See `references/jumper-lifi.md` |
 | Run resumable quote matrix tests | `node scripts/bridge-quote-matrix.mjs --address <wallet> --direction both --output quote-matrix.json --max-tests 25` | See `references/jumper-lifi.md` |
 | Save a bridge execution plan | Add `--output plan.json` to `bridge-quote.mjs` | See `references/safety.md` |
@@ -64,6 +68,18 @@ Fast safe plan for Pharos USDC to Base USDC:
 node scripts/bridge-safe.mjs --from pharos --to base --token USDC --amount 0.05 --address 0xYourWallet
 ```
 
+Compare Jumper/LI.FI, Interport CCTP relay, and CCIP, then pick the best route:
+
+```bash
+node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.05
+```
+
+Execute the current best bridge route after fresh quotes:
+
+```bash
+node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast
+```
+
 Execute a small bridge with an ephemeral plan when confirmation or policy is present:
 
 ```bash
@@ -80,6 +96,18 @@ Burn and mint native USDC through CCTP when destination gas is available:
 
 ```bash
 node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint
+```
+
+Bridge native USDC through Interport relayed CCTP:
+
+```bash
+node scripts/interport-cctp-relay.mjs --from pharos --to base --amount 0.01 --broadcast
+```
+
+Bridge USDC through Chainlink CCIP:
+
+```bash
+node scripts/ccip-transfer.mjs --from pharos --to base --token USDC --amount 0.001 --broadcast
 ```
 
 Save an auditable bridge plan:
@@ -142,6 +170,7 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast
 - Include status links for Jumper, CCTP, and CCIP when possible.
 - For CCTP, show source/destination domains, TokenMessengerV2, MessageTransmitterV2, destination gas status, burn tx, attestation readiness, and mint tx when available.
 - Use `--json` when another agent/script needs machine-readable bridge plan and safety check data.
+- For "best bridge", use `bridge-best-route.mjs`; show all provider scores and make clear which cost inputs are live quotes, relay/native fees, or estimated gas.
 - For quotes, show command previews instead of broadcasting.
 - Prefer `bridge-safe.mjs` for normal user-facing preparation because it combines quote, RPC chain-id, balances, allowance, policy status, optional ephemeral execution, and optional saved plans in one run.
 - For discovery, distinguish `/connections` support from live `/quote` success; a connection can exist while a specific token/amount quote fails.

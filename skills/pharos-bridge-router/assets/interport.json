@@ -1,0 +1,19 @@
+{
+  "description": "Interport relayed CCTP V2 registry for Pharos Bridge Router. Execution uses the documented InterportCCTPV2Bridge contract; the app fee endpoint is used only for fee discovery.",
+  "apiBaseUrl": "https://app.interport.fi/api/interport",
+  "explorerTxBaseUrl": "https://explorer.interport.fi/transactions/",
+  "contracts": {
+    "cctpV2Bridge": "0x674cb5133A2dEaA4aBE86ed56CB7555960966320"
+  },
+  "relayer": {
+    "knownAddress": "0x54c28Fdd59025942fE71545dE8c6358c30b3a16A"
+  },
+  "defaults": {
+    "decimals": 6,
+    "fastFinalityThreshold": 1000,
+    "standardFinalityThreshold": 2000,
+    "destinationCaller": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "nativeFeeBufferBps": 1500,
+    "fallbackNativeFeeWei": "50000000000000000"
+  }
+}

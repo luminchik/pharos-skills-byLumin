@@ -40,6 +40,18 @@ Mint later after attestation is ready:
 node scripts/bridge-status.mjs --provider cctp --tx 0xBurnTx --from pharos --to base --mint
 ```
 
+Interport relayed CCTP, where Interport submits the destination mint:
+
+```bash
+node scripts/interport-cctp-relay.mjs --from pharos --to base --amount 0.01 --broadcast
+```
+
+Compare Interport against Jumper/LI.FI and CCIP before execution:
+
+```bash
+node scripts/bridge-best-route.mjs --from pharos --to base --token USDC --amount 0.01
+```
+
 ## Safety Notes
 
 - CCTP has two phases: burn on source, mint on destination.
@@ -48,6 +60,8 @@ node scripts/bridge-status.mjs --provider cctp --tx 0xBurnTx --from pharos --to 
 - Interport-style CCTP is relayed: the user's source transaction goes to
   `InterportCCTPV2Bridge`, and an Interport relayer later calls Circle
   `MessageTransmitterV2.receiveMessage` on the destination chain.
+- The relayed path still uses Circle CCTP under the hood; the UX difference is
+  that the user does not send the destination mint transaction manually.
 - Use standard finality (`minFinalityThreshold=2000`) unless the source chain
   explicitly supports fast transfer and the user asks for it.
 - Approve only the exact USDC amount for `TokenMessengerV2`.

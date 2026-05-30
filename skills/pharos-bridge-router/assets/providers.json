@@ -9,6 +9,16 @@
     "name": "Transporter / Chainlink CCIP",
     "apiBaseUrl": "https://api.ccip.chain.link/v2",
     "messageUrl": "https://ccip.chain.link/msg/",
+    "defaultGasLimit": 0,
+    "defaultExtraArgs": "0x",
+    "knownUnsupportedTokenRoutes": [
+      {
+        "from": "pharos",
+        "to": "base",
+        "token": "USDC",
+        "reason": "Live Pharos mainnet preflight on 2026-05-30 reverted with ERC20: transfer to the zero address, which indicates no usable CCIP token pool for this USDC lane."
+      }
+    ],
     "pharos": {
       "chainId": 1672,
       "chainSelector": "7801139999541420232",
@@ -29,7 +39,12 @@
         "plume",
         "polygon"
       ]
+    },
+    "base": {
+      "chainId": 8453,
+      "chainSelector": "15971525489660198786",
+      "networkName": "base-mainnet",
+      "routerAddress": "0x80226fc0Ee2b096224EeAc085Bb9a8cba1146f7D"
     }
   }
 }
-
