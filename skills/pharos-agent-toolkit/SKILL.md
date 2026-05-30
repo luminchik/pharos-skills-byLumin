@@ -42,6 +42,7 @@ Run from the skill folder:
 ```bash
 node scripts/pharos-doctor.mjs
 node scripts/portfolio.mjs 0x13e272ed4a94105b1fab86ca878f6d049355c978 --network all
+node scripts/portfolio.mjs 0x13e272ed4a94105b1fab86ca878f6d049355c978 --network mainnet --json
 node scripts/allowance-audit.mjs --owner 0x13e272ed4a94105b1fab86ca878f6d049355c978 --spender <spender> --network mainnet --token all
 node scripts/nft-check.mjs --contract <nft> --owner 0x13e272ed4a94105b1fab86ca878f6d049355c978 --token-id 1 --network mainnet
 node scripts/tx-debug.mjs <tx_hash> --network all
@@ -63,6 +64,7 @@ node .\scripts\tx-debug.mjs <tx_hash> --network all
 ## Output Rules
 
 - Summarize results in Markdown tables when answering the user.
+- Use `--json` for downstream agents, automated checks, or when another script needs structured portfolio, allowance, NFT, transaction debug, or doctor output.
 - Include explorer links for wallets and transactions.
 - Filter zero ERC20 balances by default, but mention when zero balances were hidden.
 - If `cast` is missing, run the doctor workflow and show OS-specific installation guidance instead of attempting the requested chain query.

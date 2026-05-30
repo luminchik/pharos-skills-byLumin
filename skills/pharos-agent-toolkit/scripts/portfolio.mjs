@@ -21,6 +21,7 @@ function usage() {
   console.log("  --network <name|all>   Default: atlantic-testnet");
   console.log("  --input <file>         CSV/TXT file containing EVM addresses");
   console.log("  --show-zero            Show zero ERC20 balances");
+  console.log("  --json                 Print machine-readable output");
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -30,6 +31,7 @@ if (args.help || args.h) {
 }
 const networkName = args.network || undefined;
 const showZero = Boolean(args["show-zero"]);
+const jsonMode = Boolean(args.json);
 
 let addresses = [];
 if (args.input) {
@@ -99,10 +101,21 @@ for (const address of addresses) {
   }
 }
 
-console.log("# Pharos Portfolio Report");
-console.log("");
-printTable(rows);
-console.log("");
-if (hiddenZeroCount > 0) {
-  console.log(`Hidden zero ERC20 balances: ${hiddenZeroCount}. Re-run with --show-zero to display them.`);
+if (jsonMode) {
+  console.log(JSON.stringify({
+    ok: true,
+    addresses,
+    networks: networks.map((network) => network.name),
+    showZero,
+    hiddenZeroCount,
+    rows
+  }, null, 2));
+} else {
+  console.log("# Pharos Portfolio Report");
+  console.log("");
+  printTable(rows);
+  console.log("");
+  if (hiddenZeroCount > 0) {
+    console.log(`Hidden zero ERC20 balances: ${hiddenZeroCount}. Re-run with --show-zero to display them.`);
+  }
 }

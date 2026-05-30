@@ -107,6 +107,7 @@ Use normal language. The agent should pick the right skill.
 
 ```text
 Check my Pharos mainnet wallet portfolio.
+Return my Pharos wallet portfolio as JSON for another agent.
 Summarize this wallet's Pharos transaction history.
 Show my Faroswap and AquaFlux DeFi positions.
 Quote a Faroswap swap from PROS to USDC.

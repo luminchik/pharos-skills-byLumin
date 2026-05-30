@@ -15,6 +15,10 @@ function usage() {
   console.log("Usage:");
   console.log("  node scripts/tx-debug.mjs <tx_hash> --network all");
   console.log("  node scripts/tx-debug.mjs <tx_hash> --network mainnet");
+  console.log("");
+  console.log("Options:");
+  console.log("  --network <name|all>  Default: all");
+  console.log("  --json                Print machine-readable output");
 }
 
 function parseKeyValues(output) {
@@ -78,6 +82,7 @@ if (args.help || args.h) {
   usage();
   process.exit(0);
 }
+const jsonMode = Boolean(args.json);
 const txHash = args._[0];
 if (!txHash || !isTxHash(txHash)) {
   usage();
@@ -153,25 +158,46 @@ for (const network of networks) {
     Explorer: explorerTx(network, txHash)
   });
 
-  console.log(`# Pharos Transaction Debug: ${txHash}`);
-  console.log("");
-  printTable(reportRows);
-  console.log("");
-  console.log(`Contract/source address link: ${targetAddress ? explorerAddress(network, targetAddress) : "-"}`);
-  if (knownEvents) {
-    console.log(`Known event topics: ${knownEvents}`);
-  } else if (topics.length) {
-    console.log(`Event topics found: ${topics.length}. Provide ABI for full event decoding.`);
-  }
-  if (selectorLabel.endsWith("(unknown)")) {
-    console.log("Function selector is unknown. Provide ABI or source code for full calldata decoding.");
+  if (jsonMode) {
+    console.log(JSON.stringify({
+      ok: true,
+      txHash,
+      network: network.name,
+      found: true,
+      report: reportRows[reportRows.length - 1],
+      targetAddress,
+      targetExplorer: targetAddress ? explorerAddress(network, targetAddress) : "",
+      selector,
+      selectorLabel,
+      knownEvents: knownEvents ? knownEvents.split(", ") : [],
+      topicCount: topics.length,
+      topics
+    }, null, 2));
+  } else {
+    console.log(`# Pharos Transaction Debug: ${txHash}`);
+    console.log("");
+    printTable(reportRows);
+    console.log("");
+    console.log(`Contract/source address link: ${targetAddress ? explorerAddress(network, targetAddress) : "-"}`);
+    if (knownEvents) {
+      console.log(`Known event topics: ${knownEvents}`);
+    } else if (topics.length) {
+      console.log(`Event topics found: ${topics.length}. Provide ABI for full event decoding.`);
+    }
+    if (selectorLabel.endsWith("(unknown)")) {
+      console.log("Function selector is unknown. Provide ABI or source code for full calldata decoding.");
+    }
   }
   process.exit(0);
 }
 
 if (!found) {
-  console.log(`# Pharos Transaction Debug: ${txHash}`);
-  console.log("");
-  printTable(reportRows);
+  if (jsonMode) {
+    console.log(JSON.stringify({ ok: false, txHash, found: false, reports: reportRows }, null, 2));
+  } else {
+    console.log(`# Pharos Transaction Debug: ${txHash}`);
+    console.log("");
+    printTable(reportRows);
+  }
   process.exit(2);
 }

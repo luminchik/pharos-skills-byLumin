@@ -28,6 +28,7 @@ function usage() {
   console.log("  --network <name|all>       Default: atlantic-testnet");
   console.log("  --standard <auto|erc721|erc1155>  Default: auto");
   console.log("  --fetch-metadata           Fetch http(s)/ipfs JSON metadata when URI is available");
+  console.log("  --json                     Print machine-readable output");
 }
 
 function safeCast(args) {
@@ -96,6 +97,7 @@ const contract = args.contract || args._[0];
 const owner = args.owner || args._[1];
 const tokenId = args["token-id"] || args.tokenId || args._[2];
 const standardArg = String(args.standard || "auto").toLowerCase();
+const jsonMode = Boolean(args.json);
 
 if (!contract || !isAddress(contract) || !owner || !isAddress(owner) || tokenId === undefined) {
   usage();
@@ -217,11 +219,33 @@ for (const network of networks) {
   }
 }
 
-console.log("# Pharos NFT Ownership Check");
-console.log("");
-printTable(rows);
+if (jsonMode) {
+  const metadata = [];
+  for (const item of metadataTasks) {
+    const result = await item.task;
+    metadata.push({
+      network: item.network,
+      tokenId: item.tokenId,
+      uri: item.uri,
+      ...result
+    });
+  }
+  console.log(JSON.stringify({
+    ok: true,
+    contract,
+    owner,
+    tokenId,
+    standard: standardArg,
+    networks: networks.map((network) => network.name),
+    rows,
+    metadata
+  }, null, 2));
+} else {
+  console.log("# Pharos NFT Ownership Check");
+  console.log("");
+  printTable(rows);
 
-if (metadataTasks.length) {
+  if (metadataTasks.length) {
   console.log("");
   console.log("## Metadata");
   for (const item of metadataTasks) {
@@ -238,5 +262,6 @@ if (metadataTasks.length) {
     if (json.description) console.log(`Description: ${String(json.description).slice(0, 240)}`);
     if (json.image) console.log(`Image: ${ipfsToHttps(json.image)}`);
     console.log(`Fetched: ${result.url}`);
+  }
   }
 }

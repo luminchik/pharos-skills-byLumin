@@ -29,6 +29,7 @@ function usage() {
   console.log("  --network <name|all>     Default: atlantic-testnet");
   console.log("  --token <all|symbol|address>  Default: all known ERC20 tokens for the network");
   console.log("  --show-zero              Show zero allowances");
+  console.log("  --json                   Print machine-readable output");
 }
 
 function classifyAllowance(allowance, balance) {
@@ -106,6 +107,7 @@ if (!spenders.length) {
 
 const networks = selectNetworks(args.network || undefined);
 const showZero = Boolean(args["show-zero"]);
+const jsonMode = Boolean(args.json);
 const rows = [];
 const revokePlans = [];
 let hiddenZeroCount = 0;
@@ -167,36 +169,57 @@ for (const network of networks) {
   }
 }
 
-console.log("# Pharos ERC20 Allowance Audit");
-console.log("");
-console.log(`Owner: ${owner}`);
-console.log("");
-if (rows.length) {
-  printTable(rows);
+if (jsonMode) {
+  console.log(JSON.stringify({
+    ok: true,
+    owner,
+    spenders,
+    networks: networks.map((network) => network.name),
+    token: args.token || "all",
+    showZero,
+    hiddenZeroCount,
+    rows,
+    revokeCommands: revokePlans.map((plan) => ({
+      network: plan.network.name,
+      token: plan.token.symbol,
+      tokenAddress: plan.token.address,
+      spender: plan.spender,
+      bash: plan.bash,
+      powershell: plan.powershell
+    }))
+  }, null, 2));
 } else {
-  console.log("No non-zero allowances found for the provided spender list.");
-}
-console.log("");
-if (hiddenZeroCount > 0) {
-  console.log(`Hidden zero allowances: ${hiddenZeroCount}. Re-run with --show-zero to display them.`);
-}
+  console.log("# Pharos ERC20 Allowance Audit");
+  console.log("");
+  console.log(`Owner: ${owner}`);
+  console.log("");
+  if (rows.length) {
+    printTable(rows);
+  } else {
+    console.log("No non-zero allowances found for the provided spender list.");
+  }
+  console.log("");
+  if (hiddenZeroCount > 0) {
+    console.log(`Hidden zero allowances: ${hiddenZeroCount}. Re-run with --show-zero to display them.`);
+  }
 
-if (revokePlans.length) {
-  console.log("");
-  console.log("## Suggested Revoke Commands");
-  console.log("");
-  console.log("Review network, token, and spender before executing. These commands set allowance to 0.");
-  for (const plan of revokePlans) {
+  if (revokePlans.length) {
     console.log("");
-    console.log(`### ${plan.network.name} ${plan.token.symbol} spender ${plan.spender}`);
+    console.log("## Suggested Revoke Commands");
     console.log("");
-    console.log("Bash/zsh:");
-    console.log("```bash");
-    console.log(plan.bash);
-    console.log("```");
-    console.log("PowerShell:");
-    console.log("```powershell");
-    console.log(plan.powershell);
-    console.log("```");
+    console.log("Review network, token, and spender before executing. These commands set allowance to 0.");
+    for (const plan of revokePlans) {
+      console.log("");
+      console.log(`### ${plan.network.name} ${plan.token.symbol} spender ${plan.spender}`);
+      console.log("");
+      console.log("Bash/zsh:");
+      console.log("```bash");
+      console.log(plan.bash);
+      console.log("```");
+      console.log("PowerShell:");
+      console.log("```powershell");
+      console.log(plan.powershell);
+      console.log("```");
+    }
   }
 }
