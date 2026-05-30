@@ -30,7 +30,7 @@
       "path": "skills/pharos-bridge-router",
       "category": "bridge",
       "write_capable": true,
-      "summary": "Jumper/LI.FI bridge quotes and saved plans plus Transporter/Chainlink CCIP status tracking."
+      "summary": "Jumper/LI.FI bridge quotes, Circle CCTP native USDC burn/mint, and Transporter/Chainlink CCIP status tracking."
     },
     {
       "name": "pharos-faroswap-swapper",

@@ -3,8 +3,8 @@
 Portable Pharos skills for AI agents.
 
 This pack helps agents inspect wallets, summarize activity, check DeFi positions,
-deploy NFTs, run batch transfers, quote Faroswap swaps, prepare bridge routes,
-and debug Pharos transactions.
+deploy NFTs, run batch transfers, quote Faroswap swaps, prepare Jumper/CCTP/CCIP
+bridge routes, and debug Pharos transactions.
 
 Built for the Pharos Agent Center Skill Builder Campaign and designed to work
 with Codex, Claude Code, OpenClaw, and other runtimes that load `SKILL.md`
@@ -16,7 +16,7 @@ folders.
 | --- | --- |
 | `pharos-agent-toolkit` | Wallet portfolio, allowance audits, NFT checks, tx debugging, Pharos setup doctor |
 | `pharos-faroswap-swapper` | Faroswap quotes, safe swaps, buy target amount, wrap/unwrap PROS |
-| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, route discovery, safety checks, CCIP/Transporter status |
+| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, Circle CCTP native USDC, CCIP/Transporter status |
 | `pharos-nft-deployer` | ERC721/ERC1155 deploy, image metadata, IPFS helper, mint/baseURI workflows |
 | `pharos-batch-transfer` | Native/ERC20 batch sends, airdrops, distributor workflows |
 | `pharos-defi-position-checker` | Token balances, Faroswap V3 LP NFTs, AquaFlux market positions |
@@ -112,6 +112,7 @@ Show my Faroswap and AquaFlux DeFi positions.
 Quote a Faroswap swap from PROS to USDC.
 Buy 5 USDC with PROS through Faroswap.
 Prepare a bridge plan from Pharos mainnet to Base for 0.01 USDC.
+Move 0.01 native USDC from Pharos to Base through Circle CCTP.
 Create an ERC721 NFT collection on Pharos mainnet with this image.
 Plan a batch transfer to these wallets.
 Debug this Pharos transaction hash.

@@ -1,0 +1,107 @@
+{
+  "description": "Circle CCTP V2 USDC registry for Pharos Bridge Router. Verify against Circle docs before changing production addresses.",
+  "apiBaseUrl": "https://iris-api.circle.com/v2",
+  "contracts": {
+    "tokenMessengerV2": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+    "tokenMinterV2": "0xfd78EE919681417d192449715b2594ab58f5D002"
+  },
+  "defaults": {
+    "minFinalityThreshold": 2000,
+    "destinationCaller": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "decimals": 6
+  },
+  "chains": [
+    {
+      "key": "pharos",
+      "aliases": ["pharos", "pharos-mainnet", "pros"],
+      "name": "Pharos Mainnet",
+      "chainId": 1672,
+      "domain": 31,
+      "rpcUrl": "https://rpc.pharos.xyz",
+      "explorerUrl": "https://www.pharosscan.xyz",
+      "nativeSymbol": "PROS",
+      "usdc": "0xC879C018dB60520F4355C26eD1a6D572cdAC1815",
+      "standardTransfer": true,
+      "fastTransfer": false
+    },
+    {
+      "key": "base",
+      "aliases": ["base", "base-mainnet"],
+      "name": "Base",
+      "chainId": 8453,
+      "domain": 6,
+      "rpcUrl": "https://mainnet.base.org",
+      "explorerUrl": "https://basescan.org",
+      "nativeSymbol": "ETH",
+      "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "standardTransfer": true,
+      "fastTransfer": true
+    },
+    {
+      "key": "arbitrum",
+      "aliases": ["arbitrum", "arb", "arbitrum-one"],
+      "name": "Arbitrum One",
+      "chainId": 42161,
+      "domain": 3,
+      "rpcUrl": "https://arb1.arbitrum.io/rpc",
+      "explorerUrl": "https://arbiscan.io",
+      "nativeSymbol": "ETH",
+      "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "standardTransfer": true,
+      "fastTransfer": true
+    },
+    {
+      "key": "ethereum",
+      "aliases": ["ethereum", "eth", "mainnet", "ethereum-mainnet"],
+      "name": "Ethereum",
+      "chainId": 1,
+      "domain": 0,
+      "rpcUrl": "https://ethereum-rpc.publicnode.com",
+      "explorerUrl": "https://etherscan.io",
+      "nativeSymbol": "ETH",
+      "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "standardTransfer": true,
+      "fastTransfer": true
+    },
+    {
+      "key": "optimism",
+      "aliases": ["optimism", "op", "op-mainnet"],
+      "name": "OP Mainnet",
+      "chainId": 10,
+      "domain": 2,
+      "rpcUrl": "https://optimism-rpc.publicnode.com",
+      "explorerUrl": "https://optimistic.etherscan.io",
+      "nativeSymbol": "ETH",
+      "usdc": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+      "standardTransfer": true,
+      "fastTransfer": true
+    },
+    {
+      "key": "polygon",
+      "aliases": ["polygon", "polygon-pos", "matic"],
+      "name": "Polygon PoS",
+      "chainId": 137,
+      "domain": 7,
+      "rpcUrl": "https://polygon-bor-rpc.publicnode.com",
+      "explorerUrl": "https://polygonscan.com",
+      "nativeSymbol": "POL",
+      "usdc": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "standardTransfer": true,
+      "fastTransfer": true
+    },
+    {
+      "key": "avalanche",
+      "aliases": ["avalanche", "avax", "avalanche-c"],
+      "name": "Avalanche C-Chain",
+      "chainId": 43114,
+      "domain": 1,
+      "rpcUrl": "https://api.avax.network/ext/bc/C/rpc",
+      "explorerUrl": "https://snowtrace.io",
+      "nativeSymbol": "AVAX",
+      "usdc": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+      "standardTransfer": true,
+      "fastTransfer": true
+    }
+  ]
+}

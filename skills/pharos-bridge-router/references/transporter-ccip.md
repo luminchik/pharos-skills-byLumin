@@ -23,5 +23,6 @@ Known Pharos CCIP values are stored in `assets/providers.json`:
 
 ## Execution Scope
 
-The first version of this skill does not synthesize direct CCIP `ccipSend` calldata. It tracks CCIP messages and validates Pharos router support. Add direct execution only after a dedicated ABI-level workflow is tested for the exact token/lane.
+This skill does not synthesize direct CCIP `ccipSend` calldata by default. It tracks CCIP messages, validates Pharos router support, and provides Chainlink/Transporter status links. Add direct execution only after a dedicated ABI-level workflow is tested for the exact token/lane.
 
+For native USDC movement, prefer the Circle CCTP workflow in `references/circle-cctp.md`. CCTP burns and mints native USDC and does not rely on a liquidity bridge route.

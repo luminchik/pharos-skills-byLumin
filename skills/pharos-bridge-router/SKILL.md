@@ -1,7 +1,7 @@
 ---
 name: pharos-bridge-router
 description: >
-  Portable Pharos Agent Center skill for cross-chain bridge workflows through Jumper/LI.FI and Transporter/Chainlink CCIP. Use when the user asks to bridge from Pharos mainnet to another EVM chain, bridge back to Pharos, quote bridge routes, compare supported destination chains or tokens, build a safe bridge transaction plan, run fast quote plus safety checks, execute saved or ephemeral bridge plans with Foundry cast, use local mainnet auto-confirm policy, track Jumper transaction status, track Transporter CCIP message status, inspect CCIP message IDs, or diagnose Pharos bridge provider support. Supports Pharos mainnet chainId 1672, PROS, USDC, LINK, WETH, WPROS, Base, Arbitrum, Ethereum, Optimism, Polygon, BSC, Avalanche, and any LI.FI-supported chain ID.
+  Portable Pharos Agent Center skill for cross-chain bridge workflows through Jumper/LI.FI, Circle CCTP V2 native USDC, and Transporter/Chainlink CCIP. Use when the user asks to bridge from Pharos mainnet to another EVM chain, bridge back to Pharos, move native USDC with CCTP, quote bridge routes, compare supported destination chains or tokens, build a safe bridge transaction plan, run fast quote plus safety checks, execute saved or ephemeral bridge plans with Foundry cast, use local mainnet auto-confirm policy, track Jumper transaction status, track CCTP burn/mint attestation, track Transporter CCIP message status, inspect CCIP message IDs, or diagnose Pharos bridge provider support. Supports Pharos mainnet chainId 1672, PROS, USDC, LINK, WETH, WPROS, Base, Arbitrum, Ethereum, Optimism, Polygon, BSC, Avalanche, and any LI.FI-supported chain ID.
 ---
 
 # Pharos Bridge Router
@@ -9,6 +9,7 @@ description: >
 Portable bridge skill for Pharos mainnet. It supports two provider families:
 
 - Jumper/LI.FI for live route discovery, quote generation, transaction plans, and status tracking.
+- Circle CCTP V2 for native USDC burn/mint routes between Pharos and supported EVM domains.
 - Transporter/Chainlink CCIP for CCIP message status tracking and Pharos router diagnostics.
 
 Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only quote/status tasks do not need a private key.
@@ -25,6 +26,7 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 - Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Refresh quotes before execution if the saved plan is older than 10 minutes.
 - For ERC20 routes, approve only the exact quoted amount unless the user explicitly asks for another allowance.
+- For CCTP, remember it is a two-step burn/mint flow; verify destination gas before burning unless the user explicitly accepts mint-later.
 - Treat Transporter as CCIP-backed. Use Chainlink CCIP message status for tracking.
 - Do not use hidden frontend endpoints for bridge execution. Use documented/provider APIs and onchain calls.
 
@@ -36,11 +38,14 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 | One-command safe bridge flow | `node scripts/bridge-safe.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast` | Ephemeral by default; add `--save-plan` for audit |
 | Quote plus safety checks in one run | `node scripts/bridge-plan-safe.mjs --from pharos --to base --from-token USDC --to-token USDC --amount 0.05 --address <wallet> --output plan.json` | Best default for clean-chat bridge prep |
 | Quote another chain back to Pharos | `node scripts/bridge-quote.mjs --from base --to pharos --from-token ETH --to-token PROS --amount 0.001 --address <wallet>` | See `references/jumper-lifi.md` |
+| Move native USDC with Circle CCTP | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --address <wallet>` | See `references/circle-cctp.md` |
+| Burn and auto-mint CCTP USDC | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint` | Requires destination gas and confirmation/policy |
 | Discover currently supported Jumper routes | `node scripts/bridge-discover.mjs --from pharos --quotes usdc --address <wallet> --output routes.json` | See `references/jumper-lifi.md` |
 | Run resumable quote matrix tests | `node scripts/bridge-quote-matrix.mjs --address <wallet> --direction both --output quote-matrix.json --max-tests 25` | See `references/jumper-lifi.md` |
 | Save a bridge execution plan | Add `--output plan.json` to `bridge-quote.mjs` | See `references/safety.md` |
 | Execute a saved Jumper plan | `node scripts/bridge-execute.mjs --plan plan.json --broadcast --confirm CONFIRM_MAINNET_BRIDGE` | See `references/safety.md` |
 | Track a Jumper transaction | `node scripts/bridge-status.mjs --provider lifi --tx <source_tx> --from-chain pharos --to-chain base` | See `references/jumper-lifi.md` |
+| Track or mint a CCTP transfer | `node scripts/bridge-status.mjs --provider cctp --tx <burn_tx> --from pharos --to base` | Add `--mint` after attestation is ready |
 | Track a Transporter CCIP message | `node scripts/bridge-status.mjs --provider ccip --message-id <message_id>` | See `references/transporter-ccip.md` |
 | Generate Jumper or Transporter app links | `node scripts/bridge-link.mjs --provider transporter --from pharos --to base` | See provider references |
 | Diagnose bridge provider support | `node scripts/bridge-doctor.mjs` | See `references/transporter-ccip.md` |
@@ -63,6 +68,18 @@ Execute a small bridge with an ephemeral plan when confirmation or policy is pre
 
 ```bash
 node scripts/bridge-safe.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast
+```
+
+Dry-run native USDC through Circle CCTP:
+
+```bash
+node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --address 0xYourWallet
+```
+
+Burn and mint native USDC through CCTP when destination gas is available:
+
+```bash
+node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint
 ```
 
 Save an auditable bridge plan:
@@ -101,6 +118,12 @@ Track a Transporter/CCIP message:
 node scripts/bridge-status.mjs --provider ccip --message-id 0xc6a25437cd4beaf97627465257d1641dcccd6ce7e78e8dcac9fef130021c8325
 ```
 
+Track a Circle CCTP burn/mint:
+
+```bash
+node scripts/bridge-status.mjs --provider cctp --tx 0xBurnTx --from pharos --to base
+```
+
 Execute a saved plan after review:
 
 ```bash
@@ -116,7 +139,8 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast
 ## Output Rules
 
 - Show source chain, destination chain, source token, destination token, amount, provider, tool, estimated output, fees when available, transaction target, value, gas limit, and approval address.
-- Include status links for Jumper and CCIP when possible.
+- Include status links for Jumper, CCTP, and CCIP when possible.
+- For CCTP, show source/destination domains, TokenMessengerV2, MessageTransmitterV2, destination gas status, burn tx, attestation readiness, and mint tx when available.
 - Use `--json` when another agent/script needs machine-readable bridge plan and safety check data.
 - For quotes, show command previews instead of broadcasting.
 - Prefer `bridge-safe.mjs` for normal user-facing preparation because it combines quote, RPC chain-id, balances, allowance, policy status, optional ephemeral execution, and optional saved plans in one run.
@@ -131,6 +155,7 @@ node scripts/bridge-execute.mjs --plan plan.json --broadcast
 - If neither exact confirmation nor a matching policy is present, stop before execution and show both options.
 - If chain ID returned by RPC does not match the saved plan, stop.
 - If an approval transaction is required, execute it before the bridge transaction and show the approval tx hash.
+- If a CCTP destination account has zero native gas, do not auto-burn unless the user clearly accepts burn-now/mint-later.
 - Do not retry bridge broadcasts automatically.
 - `bridge-discover.mjs` is read-only, but LI.FI quote tests are rate limited. Prefer `--quotes none` first, use `--delay-ms`, and set `LIFI_API_KEY` or `LI_FI_API_KEY` when available.
 - `bridge-quote-matrix.mjs` is also read-only and resumable. Use `--max-tests` chunks and rerun the same `--output` file until `Pending` is zero.
