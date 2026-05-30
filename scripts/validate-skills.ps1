@@ -4,6 +4,32 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $skillsRoot = Join-Path $repoRoot "skills"
 $errors = New-Object System.Collections.Generic.List[string]
 
+function Get-RepoRelativePath {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $fullPath = [IO.Path]::GetFullPath($Path)
+    $rootPath = [IO.Path]::GetFullPath($repoRoot.Path)
+    if (-not $rootPath.EndsWith([IO.Path]::DirectorySeparatorChar)) {
+        $rootPath = "$rootPath$([IO.Path]::DirectorySeparatorChar)"
+    }
+
+    if ($fullPath.StartsWith($rootPath, [StringComparison]::OrdinalIgnoreCase)) {
+        return $fullPath.Substring($rootPath.Length)
+    }
+    return $fullPath
+}
+
+function Test-PathPart {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Part
+    )
+
+    $relativePath = Get-RepoRelativePath $Path
+    $parts = @($relativePath -split "[\\/]+" | Where-Object { $_ })
+    return $parts -contains $Part
+}
+
 if (-not (Test-Path $skillsRoot)) {
     throw "skills directory not found: $skillsRoot"
 }
@@ -127,12 +153,12 @@ if ($node) {
         if ($LASTEXITCODE -ne 0) {
             $errors.Add("node --check failed: $($_.FullName)")
         } else {
-            Write-Host "OK js: $($_.FullName.Substring($repoRoot.Path.Length + 1))"
+            Write-Host "OK js: $(Get-RepoRelativePath $_.FullName)"
         }
     }
 
     Get-ChildItem -Path $skillsRoot -Recurse -Filter "*.mjs" |
-        Where-Object { $_.FullName -notmatch "\\lib\\" } |
+        Where-Object { -not (Test-PathPart -Path $_.FullName -Part "lib") } |
         Sort-Object FullName |
         ForEach-Object {
             $content = Get-Content -Raw -Path $_.FullName
@@ -141,10 +167,10 @@ if ($node) {
                 if ($LASTEXITCODE -ne 0) {
                     $errors.Add("help smoke failed: $($_.FullName)")
                 } else {
-                    Write-Host "OK help: $($_.FullName.Substring($repoRoot.Path.Length + 1))"
+                    Write-Host "OK help: $(Get-RepoRelativePath $_.FullName)"
                 }
             } else {
-                $errors.Add("missing --help handler: $($_.FullName.Substring($repoRoot.Path.Length + 1))")
+                $errors.Add("missing --help handler: $(Get-RepoRelativePath $_.FullName)")
             }
         }
 } else {
@@ -182,7 +208,10 @@ if (Test-Path $secretFile) {
     $secret = (Get-Content -Raw -Path $secretFile).Trim()
     if ($secret) {
         $scanFiles = Get-ChildItem -Path $repoRoot -Recurse -File |
-            Where-Object { $_.FullName -notmatch "\\.git\\|\\out\\" }
+            Where-Object {
+                -not (Test-PathPart -Path $_.FullName -Part ".git") -and
+                -not (Test-PathPart -Path $_.FullName -Part "out")
+            }
         $hits = $scanFiles | Select-String -SimpleMatch $secret -ErrorAction SilentlyContinue
         if ($hits) {
             foreach ($hit in $hits) {
