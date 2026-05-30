@@ -6,6 +6,7 @@ import {
   getLifiTokens,
   parseArgs,
   printTable,
+  runCast,
   skillRoot,
   writeJson
 } from "./lib/bridge.mjs";
@@ -102,9 +103,29 @@ function unitsToNumber(value, decimals) {
   return Number(formatUnits(value || 0, decimals));
 }
 
+function checkValue(raw, label) {
+  const check = (raw?.safety?.checks || []).find((item) => item.check === label);
+  return check?.value ?? null;
+}
+
+function estimateSourceGasUsd(chain, gasUnits, nativePrice) {
+  if (!gasUnits || !nativePrice) return 0;
+  try {
+    const gasPrice = BigInt(runCast(["gas-price", "--rpc-url", chain.rpcUrl]).trim());
+    return unitsToNumber(gasPrice * BigInt(gasUnits), 18) * nativePrice;
+  } catch {
+    return 0;
+  }
+}
+
 function fixed(value, digits = 8) {
   if (!Number.isFinite(value)) return "-";
   return value.toFixed(digits).replace(/\.?0+$/, "") || "0";
+}
+
+function shortText(value, max = 80) {
+  const text = String(value || "");
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
 }
 
 function hasWarnings(route) {
@@ -152,6 +173,7 @@ async function quoteLifi(args) {
     gasUsd,
     feeUsd: Math.max(tokenDeltaUsd, explicitFeeUsd),
     scoreUsd,
+    costBasis: "LI.FI live quote: included token fees plus LI.FI gas cost estimate.",
     durationSeconds: estimate.executionDuration ?? "",
     executable: raw.ok && !hasWarnings({ raw }),
     command: `node scripts/bridge-safe.mjs --from ${args.from || "pharos"} --to ${args.to || "base"} --token ${args.token || "USDC"} --amount ${args.amount} --broadcast`,
@@ -169,6 +191,14 @@ async function quoteInterport(args) {
   const tokenFeeBase = BigInt(plan.amountBase || 0) - BigInt(plan.estimatedReceiveBase || 0);
   const tokenFeeUsd = unitsToNumber(tokenFeeBase, plan.token.decimals) * 1;
   const nativeFeeUsd = unitsToNumber(plan.nativeFeeWei, 18) * nativePrice;
+  const currentAllowance = BigInt(checkValue(raw, "Source USDC allowance") || 0);
+  const gasConfig = plan.estimatedSourceGas || {};
+  let sourceGasUnits = Number(gasConfig.bridge || 190000);
+  if (currentAllowance !== BigInt(plan.amountBase || 0)) {
+    sourceGasUnits += Number(gasConfig.approval || 56000);
+    if (currentAllowance > 0n) sourceGasUnits += Number(gasConfig.approvalReset || 34000);
+  }
+  const sourceGasUsd = estimateSourceGasUsd(plan.fromChain, sourceGasUnits, nativePrice);
   return {
     ok: raw.ok,
     provider: "interport",
@@ -180,9 +210,10 @@ async function quoteInterport(args) {
     tokenFeeHuman: formatUnits(tokenFeeBase, plan.token.decimals),
     nativeFeeHuman: formatUnits(plan.nativeFeeWei, 18),
     nativeFeeSymbol: plan.fromChain.nativeSymbol,
-    gasUsd: 0,
+    gasUsd: sourceGasUsd,
     feeUsd: tokenFeeUsd + nativeFeeUsd,
-    scoreUsd: tokenFeeUsd + nativeFeeUsd,
+    scoreUsd: tokenFeeUsd + nativeFeeUsd + sourceGasUsd,
+    costBasis: "Interport live fee API, estimated relayer reserve, and estimated source approval/bridge gas.",
     durationSeconds: "",
     executable: raw.ok && !hasWarnings({ raw }),
     command: `node scripts/interport-cctp-relay.mjs --from ${args.from || "pharos"} --to ${args.to || "base"} --amount ${args.amount} --broadcast`,
@@ -214,6 +245,7 @@ async function quoteCcip(args) {
     gasUsd: 0,
     feeUsd: nativeFeeUsd,
     scoreUsd: nativeFeeUsd,
+    costBasis: "Chainlink router getFee quote converted with live native token USD price; source approval gas is not included.",
     durationSeconds: "",
     executable: raw.ok && !hasWarnings({ raw }),
     command: `node scripts/ccip-transfer.mjs --from ${args.from || "pharos"} --to ${args.to || "base"} --token ${args.token || "USDC"} --amount ${args.amount} --broadcast`,
@@ -272,7 +304,8 @@ function tableRows(routes, best) {
     "Native fee": route.ok ? `${route.nativeFeeHuman} ${route.nativeFeeSymbol}` : "-",
     "Gas USD": route.ok ? fixed(route.gasUsd, 6) : "-",
     "Score USD": route.ok ? fixed(route.scoreUsd, 6) : "-",
-    Status: route === best ? "best" : routeStatus(route)
+    Basis: route.ok ? shortText(route.costBasis, 42) : "-",
+    Status: route === best ? "best" : shortText(routeStatus(route), 42)
   }));
 }
 

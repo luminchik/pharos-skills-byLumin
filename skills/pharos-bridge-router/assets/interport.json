@@ -14,6 +14,11 @@
     "standardFinalityThreshold": 2000,
     "destinationCaller": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "nativeFeeBufferBps": 1500,
-    "fallbackNativeFeeWei": "50000000000000000"
+    "fallbackNativeFeeWei": "50000000000000000",
+    "estimatedSourceGas": {
+      "approval": 56000,
+      "approvalReset": 34000,
+      "bridge": 190000
+    }
   }
 }

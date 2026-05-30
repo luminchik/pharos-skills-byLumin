@@ -30,7 +30,7 @@
       "path": "skills/pharos-bridge-router",
       "category": "bridge",
       "write_capable": true,
-      "summary": "Jumper/LI.FI bridge quotes, Circle CCTP native USDC burn/mint, and Transporter/Chainlink CCIP status tracking."
+      "summary": "Bridge route comparison and execution across Jumper/LI.FI, Interport relayed CCTP, direct Circle CCTP, and Chainlink CCIP diagnostics."
     },
     {
       "name": "pharos-faroswap-swapper",

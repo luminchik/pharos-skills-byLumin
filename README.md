@@ -16,7 +16,7 @@ folders.
 | --- | --- |
 | `pharos-agent-toolkit` | Wallet portfolio, allowance audits, NFT checks, tx debugging, Pharos setup doctor |
 | `pharos-faroswap-swapper` | Faroswap quotes, safe swaps, buy target amount, wrap/unwrap PROS |
-| `pharos-bridge-router` | Jumper/LI.FI bridge quotes, Circle CCTP native USDC, CCIP/Transporter status |
+| `pharos-bridge-router` | Compares Jumper/LI.FI, Interport CCTP relay, and CCIP routes; executes the best safe bridge route |
 | `pharos-nft-deployer` | ERC721/ERC1155 deploy, image metadata, IPFS helper, mint/baseURI workflows |
 | `pharos-batch-transfer` | Native/ERC20 batch sends, airdrops, distributor workflows |
 | `pharos-defi-position-checker` | Token balances, Faroswap V3 LP NFTs, AquaFlux market positions |
@@ -112,6 +112,7 @@ Show my Faroswap and AquaFlux DeFi positions.
 Quote a Faroswap swap from PROS to USDC.
 Buy 5 USDC with PROS through Faroswap.
 Prepare a bridge plan from Pharos mainnet to Base for 0.01 USDC.
+Find the best estimated bridge route from Pharos to Base for 0.01 USDC.
 Move 0.01 native USDC from Pharos to Base through Circle CCTP.
 Create an ERC721 NFT collection on Pharos mainnet with this image.
 Plan a batch transfer to these wallets.
@@ -177,6 +178,7 @@ If shared assets drift:
 
 - Never commit or print private keys.
 - Prefer read-only checks before write actions.
+- Compare bridge providers before choosing a route when more than one provider is available.
 - Verify Pharos chain IDs before broadcasts.
 - Use exact approvals for ERC20 writes when possible.
 - Keep saved plans for large or sensitive transactions.

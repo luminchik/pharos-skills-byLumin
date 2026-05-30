@@ -221,6 +221,7 @@ async function buildPlan(args) {
     nativeFeeWei: nativeFee.wei.toString(),
     nativeFeeSource: nativeFee.source,
     nativeFeeDetails: nativeFee.details,
+    estimatedSourceGas: interport.defaults.estimatedSourceGas || {},
     contracts: {
       ...cctp.contracts,
       interportCctpV2Bridge: interport.contracts.cctpV2Bridge
