@@ -8,7 +8,76 @@ if (-not (Test-Path $skillsRoot)) {
     throw "skills directory not found: $skillsRoot"
 }
 
-Get-ChildItem -Path $skillsRoot -Directory | Sort-Object Name | ForEach-Object {
+$skillFolders = Get-ChildItem -Path $skillsRoot -Directory | Sort-Object Name
+$skillsJsonPath = Join-Path $repoRoot "skills.json"
+$readmePath = Join-Path $repoRoot "README.md"
+
+if (-not (Test-Path $skillsJsonPath)) {
+    $errors.Add("missing skills.json")
+} else {
+    try {
+        $manifest = Get-Content -Raw -Path $skillsJsonPath | ConvertFrom-Json
+        if (-not $manifest.skills -or -not ($manifest.skills -is [System.Array])) {
+            $errors.Add("skills.json must contain a skills array")
+        } else {
+            $manifestErrorCount = $errors.Count
+            $folderNames = @($skillFolders | Select-Object -ExpandProperty Name)
+            $manifestNames = @($manifest.skills | ForEach-Object { $_.name })
+            $duplicates = $manifestNames | Group-Object | Where-Object Count -gt 1 | Select-Object -ExpandProperty Name
+            foreach ($name in $duplicates) {
+                $errors.Add("skills.json duplicate skill: $name")
+            }
+
+            foreach ($folder in $folderNames) {
+                if ($manifestNames -notcontains $folder) {
+                    $errors.Add("skills.json missing skill folder: $folder")
+                }
+            }
+            foreach ($entry in $manifest.skills) {
+                if (-not $entry.name) { $errors.Add("skills.json entry missing name"); continue }
+                if ($folderNames -notcontains $entry.name) {
+                    $errors.Add("skills.json references missing folder: $($entry.name)")
+                }
+                if (-not $entry.path) {
+                    $errors.Add("skills.json $($entry.name): missing path")
+                } elseif (-not (Test-Path (Join-Path $repoRoot $entry.path))) {
+                    $errors.Add("skills.json $($entry.name): path not found: $($entry.path)")
+                }
+                if (-not $entry.category) {
+                    $errors.Add("skills.json $($entry.name): missing category")
+                }
+                if (-not $entry.summary) {
+                    $errors.Add("skills.json $($entry.name): missing summary")
+                }
+                if ($null -eq $entry.write_capable -or $entry.write_capable.GetType().Name -ne "Boolean") {
+                    $errors.Add("skills.json $($entry.name): write_capable must be boolean")
+                }
+            }
+            if ($errors.Count -eq $manifestErrorCount) {
+                Write-Host "OK manifest: skills.json covers $($folderNames.Count) skills"
+            }
+        }
+    } catch {
+        $errors.Add("skills.json parse failed: $($_.Exception.Message)")
+    }
+}
+
+if (-not (Test-Path $readmePath)) {
+    $errors.Add("missing README.md")
+} else {
+    $readme = Get-Content -Raw -Path $readmePath
+    $docsErrorCount = $errors.Count
+    foreach ($folder in $skillFolders) {
+        if ($readme -notmatch [regex]::Escape($folder.Name)) {
+            $errors.Add("README.md does not mention skill: $($folder.Name)")
+        }
+    }
+    if ($errors.Count -eq $docsErrorCount) {
+        Write-Host "OK docs: README mentions all skill folders"
+    }
+}
+
+$skillFolders | ForEach-Object {
     $skillName = $_.Name
     $skillMd = Join-Path $_.FullName "SKILL.md"
 
