@@ -3,13 +3,27 @@ import {
   discoverPrivateKey,
   findBinary,
   loadNetworks,
+  parseArgs,
   printTable,
   runBinary,
   runCast
 } from "./lib/pharos.mjs";
 
+function usage() {
+  console.log("Usage:");
+  console.log("  node scripts/pharos-doctor.mjs");
+  console.log("");
+  console.log("Checks local Foundry tools, Pharos RPC chain IDs, and private-key discovery without printing secrets.");
+}
+
 function status(ok) {
   return ok ? "ok" : "missing";
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
 }
 
 console.log("# Pharos Doctor");

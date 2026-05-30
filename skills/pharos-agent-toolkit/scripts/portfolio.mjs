@@ -24,6 +24,10 @@ function usage() {
 }
 
 const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 const networkName = args.network || undefined;
 const showZero = Boolean(args["show-zero"]);
 

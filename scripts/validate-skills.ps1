@@ -129,6 +129,8 @@ if ($node) {
                 } else {
                     Write-Host "OK help: $($_.FullName.Substring($repoRoot.Path.Length + 1))"
                 }
+            } else {
+                $errors.Add("missing --help handler: $($_.FullName.Substring($repoRoot.Path.Length + 1))")
             }
         }
 } else {

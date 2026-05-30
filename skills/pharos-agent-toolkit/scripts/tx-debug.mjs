@@ -74,6 +74,10 @@ function normalizeAddress(value) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 const txHash = args._[0];
 if (!txHash || !isTxHash(txHash)) {
   usage();

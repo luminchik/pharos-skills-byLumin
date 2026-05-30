@@ -8,6 +8,10 @@ function usage() {
 }
 
 const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 const standard = String(args.standard || "").toLowerCase();
 const contract = args.contract;
 const to = args.to;

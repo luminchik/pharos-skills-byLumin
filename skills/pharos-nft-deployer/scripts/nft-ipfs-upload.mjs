@@ -53,6 +53,11 @@ function parseIpfsAddOutput(text) {
 const args = parseArgs(process.argv.slice(2));
 
 try {
+  if (args.help || args.h) {
+    usage();
+    process.exit(0);
+  }
+
   const dir = args.dir ? path.resolve(args.dir) : "";
   if (!dir || !fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
     usage();

@@ -68,6 +68,10 @@ function addCounter(map, key, amount = 1) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 const address = args._[0] || args.address;
 
 if (!address || !isAddress(address)) {

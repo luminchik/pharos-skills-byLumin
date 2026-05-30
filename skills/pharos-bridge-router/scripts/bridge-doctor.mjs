@@ -4,9 +4,17 @@ import {
   findBinary,
   loadCctp,
   loadProviders,
+  parseArgs,
   printTable,
   runCast
 } from "./lib/bridge.mjs";
+
+function usage() {
+  console.log("Usage:");
+  console.log("  node scripts/bridge-doctor.mjs");
+  console.log("");
+  console.log("Checks LI.FI, CCTP, CCIP, local cast, and Pharos bridge contract availability.");
+}
 
 function codeStatus(address, rpcUrl) {
   try {
@@ -15,6 +23,12 @@ function codeStatus(address, rpcUrl) {
   } catch (error) {
     return `error: ${error.message}`;
   }
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
 }
 
 async function main() {

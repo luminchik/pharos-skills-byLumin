@@ -87,6 +87,11 @@ function sendWrite(network, privateKey, contract, signature, values) {
 const args = parseArgs(process.argv.slice(2));
 
 try {
+  if (args.help || args.h) {
+    usage();
+    process.exit(0);
+  }
+
   const contract = args.contract || "";
   if (!isAddress(contract)) {
     usage();

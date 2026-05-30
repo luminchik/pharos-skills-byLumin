@@ -77,6 +77,10 @@ function resolveTokens(network, tokenArg) {
 }
 
 const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 const owner = args.owner || args._[0];
 
 if (!owner || !isAddress(owner)) {

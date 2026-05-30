@@ -2,12 +2,26 @@
 import {
   buildPlan,
   formatUnits,
+  parseArgs,
   parseCastUint,
   printTable,
   runCast,
   selectNetwork,
   tokenList
 } from "./lib/faroswap.mjs";
+
+function usage() {
+  console.log("Usage:");
+  console.log("  node scripts/faroswap-doctor.mjs");
+  console.log("");
+  console.log("Checks Pharos mainnet RPC, Faroswap quote availability, router code, and configured token metadata.");
+}
+
+const args = parseArgs(process.argv.slice(2));
+if (args.help || args.h) {
+  usage();
+  process.exit(0);
+}
 
 try {
   const network = selectNetwork("mainnet");
