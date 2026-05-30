@@ -103,6 +103,20 @@ $skillFolders | ForEach-Object {
         $errors.Add("${skillName}: frontmatter name '$frontmatterName' does not match folder")
     }
 
+    $referenceErrorCount = $errors.Count
+    $localRefs = [regex]::Matches($content, "(?<![A-Za-z0-9_./-])((?:scripts|references|assets)/[A-Za-z0-9_./-]+\.[A-Za-z0-9]+)") |
+        ForEach-Object { $_.Groups[1].Value.TrimEnd(".,;:)") } |
+        Sort-Object -Unique
+    foreach ($ref in $localRefs) {
+        $refPath = Join-Path $_.FullName ($ref -replace "/", [IO.Path]::DirectorySeparatorChar)
+        if (-not (Test-Path $refPath)) {
+            $errors.Add("${skillName}: SKILL.md references missing file: $ref")
+        }
+    }
+    if ($errors.Count -eq $referenceErrorCount) {
+        Write-Host "OK references: $skillName"
+    }
+
     Write-Host "OK metadata: $skillName"
 }
 
