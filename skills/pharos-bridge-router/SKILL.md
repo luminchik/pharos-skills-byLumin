@@ -9,7 +9,7 @@ description: >
 Portable bridge skill for Pharos mainnet. It supports two provider families:
 
 - Jumper/LI.FI for live route discovery, quote generation, transaction plans, and status tracking.
-- Circle CCTP V2 for native USDC burn/mint routes between Pharos and supported EVM domains.
+- Circle CCTP V2 for native USDC burn/mint routes between Pharos and supported EVM domains. The built-in CCTP script is direct/self-mint mode; Interport-style CCTP uses the same Circle contracts but adds a relayer that submits the destination mint.
 - Transporter/Chainlink CCIP for CCIP message status tracking and Pharos router diagnostics.
 
 Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only quote/status tasks do not need a private key.
@@ -26,7 +26,7 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 - Never print or store private keys. Execution auto-discovers `--private-key-file`, `PRIVATE_KEY`, `PHAROS_PRIVATE_KEY_FILE`, `~/.codex/secrets/pharos_private_key.txt`, then `~/.pharos/private_key`.
 - Refresh quotes before execution if the saved plan is older than 10 minutes.
 - For ERC20 routes, approve only the exact quoted amount unless the user explicitly asks for another allowance.
-- For CCTP, remember it is a two-step burn/mint flow; verify destination gas before burning unless the user explicitly accepts mint-later.
+- For direct CCTP, remember it is a two-step burn/mint flow; verify destination gas before burning unless the user explicitly accepts mint-later. If the user expects Interport-like UX, use Jumper/LI.FI or add an Interport relayed plan instead of raw direct CCTP.
 - Treat Transporter as CCIP-backed. Use Chainlink CCIP message status for tracking.
 - Do not use hidden frontend endpoints for bridge execution. Use documented/provider APIs and onchain calls.
 
@@ -38,8 +38,8 @@ Required binaries: Node.js. Required for execution: Foundry `cast`. Read-only qu
 | One-command safe bridge flow | `node scripts/bridge-safe.mjs --from pharos --to base --token USDC --amount 0.05 --broadcast` | Ephemeral by default; add `--save-plan` for audit |
 | Quote plus safety checks in one run | `node scripts/bridge-plan-safe.mjs --from pharos --to base --from-token USDC --to-token USDC --amount 0.05 --address <wallet> --output plan.json` | Best default for clean-chat bridge prep |
 | Quote another chain back to Pharos | `node scripts/bridge-quote.mjs --from base --to pharos --from-token ETH --to-token PROS --amount 0.001 --address <wallet>` | See `references/jumper-lifi.md` |
-| Move native USDC with Circle CCTP | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --address <wallet>` | See `references/circle-cctp.md` |
-| Burn and auto-mint CCTP USDC | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint` | Requires destination gas and confirmation/policy |
+| Move native USDC with direct Circle CCTP | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --address <wallet>` | See `references/circle-cctp.md` |
+| Burn and self-mint direct CCTP USDC | `node scripts/cctp-transfer.mjs --from pharos --to base --amount 0.01 --broadcast --mint` | Requires destination gas and confirmation/policy |
 | Discover currently supported Jumper routes | `node scripts/bridge-discover.mjs --from pharos --quotes usdc --address <wallet> --output routes.json` | See `references/jumper-lifi.md` |
 | Run resumable quote matrix tests | `node scripts/bridge-quote-matrix.mjs --address <wallet> --direction both --output quote-matrix.json --max-tests 25` | See `references/jumper-lifi.md` |
 | Save a bridge execution plan | Add `--output plan.json` to `bridge-quote.mjs` | See `references/safety.md` |

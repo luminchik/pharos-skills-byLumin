@@ -10,6 +10,9 @@ CCTP instead of a liquidity bridge.
 - Uses Foundry `cast` for all onchain reads and writes.
 - Uses Circle Iris API only to fetch message attestation after the source burn.
 - Does not use hidden bridge UI endpoints.
+- This is direct/self-mint CCTP. Bridge apps such as Interport may wrap the
+  same Circle CCTP flow and run a relayer that submits the destination mint
+  transaction for the user.
 
 ## Main Commands
 
@@ -42,6 +45,9 @@ node scripts/bridge-status.mjs --provider cctp --tx 0xBurnTx --from pharos --to 
 - CCTP has two phases: burn on source, mint on destination.
 - The destination signer needs native gas to call `receiveMessage`, unless a
   separate relayer handles minting.
+- Interport-style CCTP is relayed: the user's source transaction goes to
+  `InterportCCTPV2Bridge`, and an Interport relayer later calls Circle
+  `MessageTransmitterV2.receiveMessage` on the destination chain.
 - Use standard finality (`minFinalityThreshold=2000`) unless the source chain
   explicitly supports fast transfer and the user asks for it.
 - Approve only the exact USDC amount for `TokenMessengerV2`.
